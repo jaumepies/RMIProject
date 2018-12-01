@@ -187,7 +187,6 @@ public class Client {
     private static void downloadOption(CallbackServerInterface h) {
 
         boolean isCorrectFile = false;
-
         while (!isCorrectFile) {
             System.out.println("Enter the filename to download");
             try{
