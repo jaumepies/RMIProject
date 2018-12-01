@@ -1,3 +1,5 @@
+import com.sun.corba.se.impl.copyobject.JavaStreamObjectCopierImpl;
+
 import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
@@ -123,12 +125,18 @@ public class ServerImpl extends UnicastRemoteObject
     }
 
     @Override
-    public String upload(byte[] bytes, File fileDest) {
+    public String upload(byte[] bytes, File fileDest, String name, String tag) {
 
         try {
             FileOutputStream fileOuputStream = new FileOutputStream(fileDest);
+            DataObject fileInfo = new DataObject(name, tag);
+            FileWriter filewr = new FileWriter("./"+fileDest.getName()+".json");
             fileOuputStream.write(bytes);
             fileOuputStream.close();
+
+            filewr.write(fileInfo.createJSONObject().toString());
+            filewr.flush();
+            filewr.close();
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");
             return "File: " + fileDest.getName() + " uploaded correctly.";
         }  catch (IOException e) {

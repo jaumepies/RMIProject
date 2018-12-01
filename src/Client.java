@@ -141,11 +141,15 @@ public class Client {
                         copyName += "1";
                         fileDest = new File("./receivedData/"+copyName);
                     }
+                    String fileTitleUp = getTitle();
+                    String fileTagUp = getTag();
+
                     if(copyName != fileNameUp) {
                         System.out.println("The file already exists and it has been modified to "+ copyName);
                     }
+
                     //Upload the file to the server
-                    System.out.println(h.upload(fileBytes, fileDest));
+                    System.out.println(h.upload(fileBytes, fileDest, fileTitleUp, fileTagUp));
                     isCorrectFile = true;
                 }
 
@@ -153,6 +157,32 @@ public class Client {
             }
         }
 
+    }
+
+    private static String getTitle() {
+        String title = "";
+        try{
+            do{
+                System.out.println("Enter the title of file:");
+                title = br.readLine();
+            }while(title == "");
+        }catch(IOException e){
+
+        }
+        return title;
+    }
+
+    private static String getTag() {
+        String tag = "";
+        try{
+            do{
+                System.out.println("Enter the tag of file:");
+                tag = br.readLine();
+            }while(tag == "");
+        }catch(IOException e){
+
+        }
+        return tag;
     }
 
     private static void downloadOption(CallbackServerInterface h) {

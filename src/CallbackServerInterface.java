@@ -32,7 +32,7 @@ public interface CallbackServerInterface extends Remote {
     public byte[] fileToBytes(File file) throws java.rmi.RemoteException;
     public File getFileToDownload(String fileName) throws java.rmi.RemoteException;
 
-    public String upload(byte[] bytes, File fileDest)throws java.rmi.RemoteException;
+    public String upload(byte[] bytes, File fileDest, String name, String tag)throws java.rmi.RemoteException;
 
     public byte[] download(String name)throws java.rmi.RemoteException;
 }

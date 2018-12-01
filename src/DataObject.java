@@ -1,27 +1,31 @@
-import com.fasterxml.jackson.databind.util.JSONPObject;
+
+
+import org.json.JSONObject;
 
 import java.util.Objects;
-import javax.json.*;
 
 public class DataObject {
     private String name;
-    private String description;
-    private String type;
+    private String tag;
     private int id;
+    private static int nextId = 0;
 
 
-    JSONPObject jsonObject;
+    JSONObject jsonObject;
 
     public  DataObject() {
         this.name = null;
-        this.description = null;
-        this.type = null;
+        this.tag = null;
+        jsonObject = null;
+        this.id = 0;
     }
 
-    public  DataObject(String name, String description, String type) {
+    public  DataObject(String name, String tag) {
         this.name = name;
-        this.description = description;
-        this.type = type;
+        this.tag = tag;
+        jsonObject = new JSONObject();
+        id = nextId;
+        nextId++;
     }
 
     public String getName() {
@@ -32,25 +36,25 @@ public class DataObject {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getTag() {
+        return tag;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setTag(String description) {
+        this.tag = description;
     }
 
-    public String getType() {
-        return type;
+    public int getId() {
+        return id;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public JSONObject createJSONObject(){
+        jsonObject.put("Name",this.name);
+        jsonObject.put("Tag",this.tag);
+        jsonObject.put("Id", this.id);
+        return jsonObject;
     }
 
-    public void createID(){
-        this.id = hashCode();
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -58,13 +62,7 @@ public class DataObject {
         if (!(o instanceof DataObject)) return false;
         DataObject that = (DataObject) o;
         return Objects.equals(getName(), that.getName()) &&
-                Objects.equals(getDescription(), that.getDescription()) &&
-                Objects.equals(getType(), that.getType());
+                Objects.equals(getTag(), that.getTag());
     }
 
-    @Override
-    public int hashCode() {
-
-        return Objects.hash(getName(), getDescription(), getType());
-    }
 }
