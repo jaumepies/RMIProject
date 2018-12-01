@@ -165,7 +165,7 @@ public class Client {
             do{
                 System.out.println("Enter the title of file:");
                 title = br.readLine();
-            }while(title == "");
+            }while(title.equals(""));
         }catch(IOException e){
 
         }
@@ -175,10 +175,8 @@ public class Client {
     private static String getTag() {
         String tag = "";
         try{
-            do{
-                System.out.println("Enter the tag of file:");
-                tag = br.readLine();
-            }while(tag == "");
+            System.out.println("Enter the tag of file:");
+            tag = br.readLine();
         }catch(IOException e){
 
         }
