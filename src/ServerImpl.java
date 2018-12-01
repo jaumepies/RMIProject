@@ -72,7 +72,9 @@ public class ServerImpl extends UnicastRemoteObject
     public File getFileToDownload(String fileName){
 
         File file = new File("./receivedData/"+fileName);
-        file.getPath();
+        if(!file.exists()) {
+            return null;
+        }
         return file;
     }
 
@@ -140,6 +142,9 @@ public class ServerImpl extends UnicastRemoteObject
         //byte[] bytes = new byte[BUF_SIZE];
         File fileSource = getFileToDownload(name);
 
+        if(fileSource == null) {
+            return null;
+        }
         byte[] fileBytes = fileToBytes(fileSource);
 
         System.out.println("File: " + fileSource.getName() + " downloaded correctly.");

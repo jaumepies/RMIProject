@@ -26,8 +26,10 @@ public class ClientImpl extends UnicastRemoteObject
     public File getFile(String fileName){
 
         File file = new File("./sharedData/"+fileName);
-        //file.getPath();
-        return file;
+        if(file.exists()) {
+            return  file;
+        }
+        return null;
     }
 
 
