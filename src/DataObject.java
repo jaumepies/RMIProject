@@ -1,12 +1,14 @@
 
 
-import org.json.JSONObject;
+
+import org.json.simple.JSONObject;
 
 import java.util.Objects;
 
 public class DataObject {
     private String name;
     private String tag;
+    private String fileName;
     private int id;
     private static int nextId = 0;
 
@@ -18,14 +20,16 @@ public class DataObject {
         this.tag = null;
         jsonObject = null;
         this.id = 0;
+        this.fileName = null;
     }
 
-    public  DataObject(String name, String tag) {
+    public  DataObject(String name, String tag, String fileName) {
         this.name = name;
         this.tag = tag;
         jsonObject = new JSONObject();
         id = nextId;
         nextId++;
+        this.fileName = fileName;
     }
 
     public String getName() {
@@ -48,10 +52,19 @@ public class DataObject {
         return id;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     public JSONObject createJSONObject(){
         jsonObject.put("Name",this.name);
         jsonObject.put("Tag",this.tag);
         jsonObject.put("Id", this.id);
+        jsonObject.put("FileName", this.fileName);
         return jsonObject;
     }
 

@@ -14,6 +14,9 @@ import java.util.Vector;
 public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
 
+    static FileWriter filewr;
+    static final String FILE_INFO = "./fileInfo.json";
+
     private Vector clientList;
     final public static int BUF_SIZE = 1024 * 64;
 
@@ -21,6 +24,12 @@ public class ServerImpl extends UnicastRemoteObject
     public ServerImpl() throws RemoteException {
         super( );
         clientList = new Vector();
+
+        try {
+            filewr = new FileWriter(FILE_INFO);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String sayHello( )
@@ -129,14 +138,13 @@ public class ServerImpl extends UnicastRemoteObject
 
         try {
             FileOutputStream fileOuputStream = new FileOutputStream(fileDest);
-            DataObject fileInfo = new DataObject(name, tag);
-            FileWriter filewr = new FileWriter("./"+fileDest.getName()+".json");
+            DataObject fileInfo = new DataObject(name, tag, fileDest.getName());
             fileOuputStream.write(bytes);
             fileOuputStream.close();
 
-            filewr.write(fileInfo.createJSONObject().toString());
+            filewr.write(fileInfo.createJSONObject().toJSONString());
             filewr.flush();
-            filewr.close();
+
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");
             return "File: " + fileDest.getName() + " uploaded correctly.";
         }  catch (IOException e) {

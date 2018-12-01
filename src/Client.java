@@ -21,6 +21,7 @@ public class Client {
     static CallbackClientInterface callbackObj;
     static boolean isFinished = false;
 
+
     public static void main(String args[]) {
         try {
             int RMIPort;
@@ -52,7 +53,6 @@ public class Client {
             }
             h.unregisterForCallback(callbackObj);
             System.out.println("Unregistered for callback.");*/
-
             while(!isFinished){
                 checkCorrectOption(h);
             }
@@ -87,6 +87,7 @@ public class Client {
     }
 
     private static boolean isCorrectOption(String option, CallbackServerInterface h) {
+
         switch (option){
 
             case "D": //Download
