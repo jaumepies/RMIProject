@@ -17,8 +17,8 @@ public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
 
     static FileWriter filewr;
-    static final String FILE_INFO = "./fileInfo.json";
     static JSONArray arrayJSON;
+    static final String FILE_INFO = "./fileInfo.json";
 
 
 
@@ -149,7 +149,9 @@ public class ServerImpl extends UnicastRemoteObject
             fileOuputStream.close();
 
 
-            arrayJSON.add(fileInfo.createJSONObject().toJSONString());
+            FileWriter filewr = new FileWriter(FILE_INFO);
+
+            arrayJSON.add(fileInfo.createJSONObject());
 
             filewr.write(String.valueOf(arrayJSON));
 

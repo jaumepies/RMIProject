@@ -1,7 +1,15 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.*;
 import java.nio.Buffer;
 import java.rmi.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.regex.Pattern;
 
 /**
@@ -33,8 +41,9 @@ public class Client {
 
             System.out.println("Enter the RMIRegistry host namer:");
             hostName = br.readLine();
-            System.out.println("Enter the RMIregistry port number:");
-            String portNum = br.readLine();
+            //ARREGLAR EL PORT -------------------------------------------------------------------
+            //System.out.println("Enter the RMIregistry port number:");
+            String portNum = "8001"; // br.readLine();
             RMIPort = Integer.parseInt(portNum);
             /*System.out.println(
                     "Enter how many seconds to stay registered:");
@@ -103,7 +112,7 @@ public class Client {
                 return true;
 
             case "S": //Search
-                searchOption(h);
+                searchOption();
                 return true;
 
             case "R": //Delete
@@ -188,8 +197,9 @@ public class Client {
         return tag;
     }
 
-    private static void downloadOption(CallbackServerInterface h) {
 
+    private static void downloadOptionANTIC(CallbackServerInterface h) {
+        /*
         boolean isCorrectFile = false;
         while (!isCorrectFile) {
             System.out.println("Enter the filename to download");
@@ -227,62 +237,146 @@ public class Client {
             } catch (IOException e) {
 
             }
-        }
+        }*/
     }
 
-    private static void downloadOption2(CallbackServerInterface h) {
+
+    private static void downloadOption(CallbackServerInterface h) {
 
         boolean isCorrectTitle = false;
         while (!isCorrectTitle) {
             System.out.println("Enter the title to download");
             try{
                 String fileTitle = br.readLine();
-                FileReader fileReader = new FileReader(FILE_INFO);
 
-                BufferedReader br = null;
+                JSONParser parser = new JSONParser();
+                JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
 
-                //br = new BufferedReader(new FileReader(FILENAME));
-                br = new BufferedReader(fileReader);
+                JSONArray filesWithTitle = getFilesWithTitles(filesList, fileTitle);
 
-                String sCurrentLine;
-
-                ArrayList<String> filesList = new ArrayList<>();
-                while ((sCurrentLine = br.readLine()) != null) {
-                    if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher(sCurrentLine).find()) {
-                        System.out.println(sCurrentLine);
-                        filesList.add(sCurrentLine);
-                    }
-
-                }
-
-                if(filesList.size() == 0) {
+                if(filesWithTitle.size() == 0) {
                     System.out.println("Title not found");
-                } else if(filesList.size() == 1) {
-                    //downloadFile(filesList.get(0));
-
+                } else{
                     isCorrectTitle = true;
-                } else {
-                    System.out.println("Select one of this titles");
-                    //String fileInfo = getFileInfo(filesList);
-                    //downloadFile();
-                    for (int i = 0; i < filesList.size(); i++) {
-                        String fileInformation = filesList.get(i);
-
+                    if(filesWithTitle.size() == 1) {
+                        downloadFile((JSONObject) filesWithTitle.get(0), h);
+                    } else {
+                        JSONObject fileInfo = selectFile(filesWithTitle);
+                        downloadFile(fileInfo, h);
                     }
-
-
-
-                    isCorrectTitle = true;
                 }
-
 
             } catch (IOException e) {
 
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    private static void searchOption(CallbackServerInterface h) {
+    private static void downloadFile(JSONObject jsonObject, CallbackServerInterface h) throws IOException {
+
+        String fileNameDwn = jsonObject.get("FileName").toString();
+        String copyName = fileNameDwn;
+
+        File fileDestDwn = new File("./sharedData/"+fileNameDwn);
+
+        while(fileDestDwn.exists()) {
+            copyName += "1";
+            fileDestDwn = new File("./sharedData/"+copyName);
+        }
+        if(copyName != fileNameDwn) {
+            System.out.println("The file already exists and it has been modified to "+ copyName);
+        }
+
+        byte[] downfileBytes = h.download(fileNameDwn);
+
+        if(downfileBytes == null) {
+            System.out.println("The file does not exist");
+        } else {
+            FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
+
+            if(downfileBytes.length != 0) {
+                fileOuputStream.write(downfileBytes);
+                fileOuputStream.close();
+                System.out.println("File: " + copyName + " downloaded correctly.");
+            }
+            else {
+                System.out.println("Download error!!!!");
+            }
+        }
+
+    }
+
+    private static JSONObject selectFile(JSONArray filesWithTitle) throws IOException {
+        System.out.println("Choose the correct title");
+        for (int i = 0; i < filesWithTitle.size(); i++) {
+            Object f = filesWithTitle.get(i);
+            JSONObject file = (JSONObject) f;
+            System.out.print(file.get("Name") + "[" + i +"] ");
+        }
+        System.out.println();
+        String selectTitle = br.readLine();
+        return (JSONObject) filesWithTitle.get(Integer.parseInt(selectTitle));
+    }
+
+    private static JSONArray getFilesWithTitles(JSONArray filesList, String fileTitle) {
+        JSONArray filesWithTitle = new JSONArray();
+
+        for (Object f : filesList) {
+            JSONObject file = (JSONObject) f;
+            if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                    file.get("FileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
+                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("Tag")).find() ||
+                    Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                            file.get("Name")).find()){
+                //System.out.println("Found title");
+                filesWithTitle.add(file);
+            } else {
+                //System.out.println("Title not found");
+            }
+        }
+        return filesWithTitle;
+    }
+
+    private static void searchOption() {
+        boolean isCorrectDescription = false;
+        while (!isCorrectDescription) {
+            System.out.println("Enter the description to search");
+            try{
+                String fileText = br.readLine();
+
+                JSONParser parser = new JSONParser();
+                JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
+
+                JSONArray filesWithText = getFilesWithTitles(filesList, fileText);
+
+                if(filesWithText.size() == 0) {
+                    System.out.println("Title not found");
+                } else{
+                    isCorrectDescription = true;
+                    if(filesWithText.size() == 1) {
+                        searchFile((JSONObject) filesWithText.get(0));
+                    } else {
+                        JSONObject fileInfo = selectFile(filesWithText);
+                        searchFile(fileInfo);
+                    }
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private static void searchFile(JSONObject jsonObject) {
+
+        for (int i = 0; i < jsonObject.size(); i++) {
+
+        }
     }
 
     private static void deleteOption(CallbackServerInterface h) {

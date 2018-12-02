@@ -61,8 +61,8 @@ public class DataObject {
     }
 
     public JSONObject createJSONObject(){
-        jsonObject.put("Name",this.name);
-        jsonObject.put("Tag",this.tag);
+        jsonObject.put("Name", this.name);
+        jsonObject.put("Tag", this.tag);
         jsonObject.put("Id", this.id);
         jsonObject.put("FileName", this.fileName);
         return jsonObject;

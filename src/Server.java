@@ -17,9 +17,9 @@ public class Server {
         BufferedReader br = new BufferedReader(is);
         String portNum, registryURL;
         try{
-            System.out.println(
-                    "Enter the RMIregistry port number:");
-            portNum = (br.readLine()).trim();
+            //System.out.println("Enter the RMIregistry port number:");
+            //ARREGLAR PORT --------------------------------------------------------
+            portNum = ("8001").trim(); //br.readLine()
             int RMIPortNum = Integer.parseInt(portNum);
             startRegistry(RMIPortNum);
             ServerImpl exportedObj =
