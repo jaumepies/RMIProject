@@ -1,4 +1,6 @@
 import com.sun.corba.se.impl.copyobject.JavaStreamObjectCopierImpl;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import java.io.*;
 import java.rmi.*;
@@ -16,6 +18,9 @@ public class ServerImpl extends UnicastRemoteObject
 
     static FileWriter filewr;
     static final String FILE_INFO = "./fileInfo.json";
+    static JSONArray arrayJSON;
+
+
 
     private Vector clientList;
     final public static int BUF_SIZE = 1024 * 64;
@@ -26,6 +31,7 @@ public class ServerImpl extends UnicastRemoteObject
         clientList = new Vector();
 
         try {
+            arrayJSON = new JSONArray();
             filewr = new FileWriter(FILE_INFO);
         } catch (IOException e) {
             e.printStackTrace();
@@ -142,7 +148,11 @@ public class ServerImpl extends UnicastRemoteObject
             fileOuputStream.write(bytes);
             fileOuputStream.close();
 
-            filewr.write(fileInfo.createJSONObject().toJSONString());
+
+            arrayJSON.add(fileInfo.createJSONObject().toJSONString());
+
+            filewr.write(String.valueOf(arrayJSON));
+
             filewr.flush();
 
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");

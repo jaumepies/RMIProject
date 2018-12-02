@@ -1,6 +1,8 @@
 import java.io.*;
 import java.nio.Buffer;
 import java.rmi.*;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 /**
  * This class represents the object client for a
@@ -20,6 +22,8 @@ public class Client {
     static BufferedReader br = new BufferedReader(is);
     static CallbackClientInterface callbackObj;
     static boolean isFinished = false;
+    static final String FILE_INFO = "./fileInfo.json";
+
 
 
     public static void main(String args[]) {
@@ -219,6 +223,58 @@ public class Client {
                     }
                     isCorrectFile = true;
                 }
+
+            } catch (IOException e) {
+
+            }
+        }
+    }
+
+    private static void downloadOption2(CallbackServerInterface h) {
+
+        boolean isCorrectTitle = false;
+        while (!isCorrectTitle) {
+            System.out.println("Enter the title to download");
+            try{
+                String fileTitle = br.readLine();
+                FileReader fileReader = new FileReader(FILE_INFO);
+
+                BufferedReader br = null;
+
+                //br = new BufferedReader(new FileReader(FILENAME));
+                br = new BufferedReader(fileReader);
+
+                String sCurrentLine;
+
+                ArrayList<String> filesList = new ArrayList<>();
+                while ((sCurrentLine = br.readLine()) != null) {
+                    if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher(sCurrentLine).find()) {
+                        System.out.println(sCurrentLine);
+                        filesList.add(sCurrentLine);
+                    }
+
+                }
+
+                if(filesList.size() == 0) {
+                    System.out.println("Title not found");
+                } else if(filesList.size() == 1) {
+                    //downloadFile(filesList.get(0));
+
+                    isCorrectTitle = true;
+                } else {
+                    System.out.println("Select one of this titles");
+                    //String fileInfo = getFileInfo(filesList);
+                    //downloadFile();
+                    for (int i = 0; i < filesList.size(); i++) {
+                        String fileInformation = filesList.get(i);
+
+                    }
+
+
+
+                    isCorrectTitle = true;
+                }
+
 
             } catch (IOException e) {
 
