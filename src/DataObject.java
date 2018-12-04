@@ -13,7 +13,7 @@ public class DataObject {
     private static int nextId = 0;
 
 
-    JSONObject jsonObject;
+    static JSONObject jsonObject;
 
     public  DataObject() {
         this.name = null;

@@ -1,10 +1,16 @@
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.corba.se.impl.copyobject.JavaStreamObjectCopierImpl;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.xml.crypto.Data;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
@@ -20,10 +26,11 @@ import java.util.regex.Pattern;
 public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
 
-    static FileWriter filewr;
     static FileReader fileReader;
     static JSONArray arrayJSON;
+
     static final String FILE_INFO = "./fileInfo.json";
+    static final String COPY_FILE = "./fileInfo2.json";
 
 
 
@@ -35,13 +42,8 @@ public class ServerImpl extends UnicastRemoteObject
         super( );
         clientList = new Vector();
 
-        try {
-            arrayJSON = new JSONArray();
-            fileReader = new FileReader(FILE_INFO);
-            filewr = new FileWriter(FILE_INFO);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        arrayJSON = new JSONArray();
+
     }
 
     public String sayHello( )
@@ -154,7 +156,18 @@ public class ServerImpl extends UnicastRemoteObject
             fileOuputStream.write(bytes);
             fileOuputStream.close();
 
+            ArrayDataObject arrayDataObject = new ArrayDataObject();
+            ObjectMapper objectMapper = new ObjectMapper();
 
+            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
+
+            arrayDataObject.addDataObject(fileInfo);
+
+            objectMapper.writeValue(new File(FILE_INFO), arrayDataObject);
+
+            /*
             FileWriter filewr = new FileWriter(FILE_INFO);
 
             arrayJSON.add(fileInfo.createJSONObject());
@@ -162,6 +175,7 @@ public class ServerImpl extends UnicastRemoteObject
             filewr.write(String.valueOf(arrayJSON));
 
             filewr.flush();
+            filewr.close();*/
 
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");
             return "File: " + fileDest.getName() + " uploaded correctly.";
