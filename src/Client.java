@@ -249,22 +249,31 @@ public class Client {
             try{
                 String fileTitle = br.readLine();
 
-                JSONParser parser = new JSONParser();
-                JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
-
-                JSONArray filesWithTitle = getFilesWithTitles(filesList, fileTitle);
-
-                if(filesWithTitle.size() == 0) {
+                if(h.getFilesWithTitles(fileTitle).size() == 0) {
                     System.out.println("Title not found");
-                } else{
+                }
+                else{
                     isCorrectTitle = true;
+                    if(h.getFilesWithTitles(fileTitle).size() == 1) {
+                        System.out.println(h.downloadFile((JSONObject) h.getFilesWithTitles(fileTitle).get(0)));
+                    } else {
+                        ArrayList<String> arrayString = h.selectFile(h.getFilesWithTitles(fileTitle));
+                        for(String str: arrayString) {
+                            System.out.println(str);
+                        }
+                        String fileInfo = br.readLine();
+                        System.out.println(h.downloadFileString(fileInfo));
+
+
+                    }
+                }    /*
                     if(filesWithTitle.size() == 1) {
                         downloadFile((JSONObject) filesWithTitle.get(0), h);
                     } else {
                         JSONObject fileInfo = selectFile(filesWithTitle);
                         downloadFile(fileInfo, h);
                     }
-                }
+                */
 
             } catch (IOException e) {
 
@@ -275,7 +284,7 @@ public class Client {
     }
 
     private static void downloadFile(JSONObject jsonObject, CallbackServerInterface h) throws IOException {
-
+/*
         String fileNameDwn = jsonObject.get("FileName").toString();
         String copyName = fileNameDwn;
 
@@ -304,7 +313,7 @@ public class Client {
             else {
                 System.out.println("Download error!!!!");
             }
-        }
+        }*/
 
     }
 

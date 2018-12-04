@@ -1,6 +1,14 @@
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.rmi.*;
+import java.util.ArrayList;
+import java.util.BitSet;
 
 /**
  * This is a remote interface for illustrating RMI
@@ -36,4 +44,11 @@ public interface CallbackServerInterface extends Remote {
     public String upload(byte[] bytes, File fileDest, String name, String tag)throws java.rmi.RemoteException;
 
     public byte[] download(String name)throws java.rmi.RemoteException;
+
+    public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException;
+
+    public String downloadFile(JSONObject jsonObject) throws IOException;
+    public String downloadFileString(String string) throws IOException;
+
+    public ArrayList<String> selectFile(JSONArray filesWithTitle)throws java.rmi.RemoteException;
 }

@@ -1,11 +1,15 @@
 import com.sun.corba.se.impl.copyobject.JavaStreamObjectCopierImpl;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
+import java.util.ArrayList;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 /**
  * This class implements the remote interface
@@ -17,6 +21,7 @@ public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
 
     static FileWriter filewr;
+    static FileReader fileReader;
     static JSONArray arrayJSON;
     static final String FILE_INFO = "./fileInfo.json";
 
@@ -32,6 +37,7 @@ public class ServerImpl extends UnicastRemoteObject
 
         try {
             arrayJSON = new JSONArray();
+            fileReader = new FileReader(FILE_INFO);
             filewr = new FileWriter(FILE_INFO);
         } catch (IOException e) {
             e.printStackTrace();
@@ -179,5 +185,80 @@ public class ServerImpl extends UnicastRemoteObject
 
         return fileBytes;
 
+    }
+
+    @Override
+    public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException {
+
+        JSONParser parser = new JSONParser();
+        JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
+
+        JSONArray filesWithTitle = new JSONArray();
+
+        for (Object f : filesList) {
+            JSONObject file = (JSONObject) f;
+            if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                    file.get("FileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
+                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("Tag")).find() ||
+                    Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                            file.get("Name")).find()){
+                //System.out.println("Found title");
+                filesWithTitle.add(file);
+            } else {
+                //System.out.println("Title not found");
+            }
+        }
+        return filesWithTitle;
+    }
+
+    @Override
+    public String downloadFile(JSONObject jsonObject) throws IOException {
+        String fileNameDwn = jsonObject.get("FileName").toString();
+        return downloadFileString(fileNameDwn);
+
+    }
+
+    public String downloadFileString(String fileNameDwn) throws IOException {
+        String copyName = fileNameDwn;
+
+        File fileDestDwn = new File("./sharedData/"+fileNameDwn);
+
+        while(fileDestDwn.exists()) {
+            copyName += "1";
+            fileDestDwn = new File("./sharedData/"+copyName);
+        }
+        if(copyName != fileNameDwn) {
+            System.out.println("The file already exists and it has been modified to "+ copyName);
+        }
+
+        byte[] downfileBytes = download(fileNameDwn);
+
+        if(downfileBytes == null) {
+            System.out.println("The file does not exist");
+        } else {
+            FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
+
+            if(downfileBytes.length != 0) {
+                fileOuputStream.write(downfileBytes);
+                fileOuputStream.close();
+                System.out.println("File: " + copyName + " downloaded correctly.");
+            }
+            else {
+                System.out.println("Download error!!!!");
+            }
+        }
+        return "File: " + fileDestDwn.getName() + " downloaded correctly.";
+    }
+
+    @Override
+    public ArrayList<String> selectFile(JSONArray filesWithTitle) {
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add("Choose the correct title");
+        for (int i = 0; i < filesWithTitle.size(); i++) {
+            Object f = filesWithTitle.get(i);
+            JSONObject file = (JSONObject) f;
+            arrayList.add(file.get("Name") + "[" + file.get("Id") +"] ");
+        }
+        return arrayList;
     }
 }// end ServerImpl class
