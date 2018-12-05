@@ -12,17 +12,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
-/**
- * This class represents the object client for a
- * distributed object of class ServerImpl,
- * which implements the remote interface 
- * CallbackServerInterface.  It also accepts callback
- * from the server.
- *
- *
- *
- * @author M. L. Liu
- */
 
 public class Client {
 
@@ -39,8 +28,11 @@ public class Client {
             int RMIPort;
             String hostName;
 
-            System.out.println("Enter the RMIRegistry host namer:");
-            hostName = br.readLine();
+
+
+
+            /*System.out.println("Enter the RMIRegistry host namer:");
+            hostName = br.readLine();*/
             //ARREGLAR EL PORT -------------------------------------------------------------------
             //System.out.println("Enter the RMIregistry port number:");
             String portNum = "8001"; // br.readLine();
@@ -53,6 +45,10 @@ public class Client {
             // find the remote object and cast it to an
             //   interface object
             CallbackServerInterface h = (CallbackServerInterface)Naming.lookup(registryURL);
+            while(!isFinished) {
+                checkUserOption(h);
+            }
+
             System.out.println("Lookup completed " );
             System.out.println("Server said " + h.sayHello());
             callbackObj = new ClientImpl();
@@ -66,6 +62,7 @@ public class Client {
             }
             h.unregisterForCallback(callbackObj);
             System.out.println("Unregistered for callback.");*/
+            //Aquesta part s'ha de canviar, la ficarem un cop fet el LOGIN!!!!!!!
             while(!isFinished){
                 checkCorrectOption(h);
             }
@@ -78,6 +75,46 @@ public class Client {
                     "Exception in Client: " + e);
         } // end catch
     } //end main
+
+    private static void checkUserOption(CallbackServerInterface h) {
+        boolean correctOption = false;
+
+        while(!correctOption){
+
+            System.out.println("\nChoose your option:");
+            System.out.println("Login[L] New User[N] Exit[E]");
+
+            String option = "";
+            try {
+                option = br.readLine();
+            } catch (IOException e) {
+            }
+
+            correctOption= isCorrectUserOption(option, h);
+
+        }
+    }
+
+    private static boolean isCorrectUserOption(String option, CallbackServerInterface h) {
+
+        switch (option){
+            case "L": //Login
+
+            case "N": //New user
+
+            case "E": //Exit
+                try {
+                    h.unregisterForCallback(callbackObj);
+                    isFinished = true;
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                return true;
+            default:
+                System.out.println("Incorrect option\n");
+                return false;
+        }
+    }
 
     private static void checkCorrectOption(CallbackServerInterface h) {
 
