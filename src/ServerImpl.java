@@ -204,13 +204,8 @@ public class ServerImpl extends UnicastRemoteObject
     @Override
     public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException {
 
-        ObjectMapper mapper = new ObjectMapper();
-        JSONParser parser = new JSONParser();
-        String stringJSON = mapper.writeValueAsString(parser.parse(new FileReader(FILE_INFO)));
 
-
-        JSONObject json = (JSONObject) parser.parse(stringJSON);
-        JSONArray filesList = (JSONArray) json.get("dataObjectArraylist");
+        JSONArray filesList = getFilesList();
         //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
 
         JSONArray filesWithTitle = new JSONArray();
@@ -229,6 +224,16 @@ public class ServerImpl extends UnicastRemoteObject
             }
         }
         return filesWithTitle;
+    }
+
+    public JSONArray getFilesList() throws ParseException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JSONParser parser = new JSONParser();
+        String stringJSON = mapper.writeValueAsString(parser.parse(new FileReader(FILE_INFO)));
+
+
+        JSONObject json = (JSONObject) parser.parse(stringJSON);
+        return (JSONArray) json.get("dataObjectArraylist");
     }
 
     @Override
@@ -280,5 +285,12 @@ public class ServerImpl extends UnicastRemoteObject
             arrayList.add(file.get("name") + "[" + file.get("id") +"] ");
         }
         return arrayList;
+    }
+
+    @Override
+    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) {
+        ArrayList<String> fileInfo = new ArrayList<>();
+
+        return fileInfo;
     }
 }// end ServerImpl class

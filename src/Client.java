@@ -100,7 +100,7 @@ public class Client {
                 return true;
 
             case "S": //Search
-                searchOption();
+                searchOption(h);
                 return true;
 
             case "R": //Delete
@@ -185,50 +185,6 @@ public class Client {
         return tag;
     }
 
-
-    private static void downloadOptionANTIC(CallbackServerInterface h) {
-        /*
-        boolean isCorrectFile = false;
-        while (!isCorrectFile) {
-            System.out.println("Enter the filename to download");
-            try{
-                String fileNameDwn = br.readLine();
-                String copyName = fileNameDwn;
-                File fileDestDwn = new File("./sharedData/"+fileNameDwn);
-
-                while(fileDestDwn.exists()) {
-                    copyName += "1";
-                    fileDestDwn = new File("./sharedData/"+copyName);
-                }
-                if(copyName != fileNameDwn) {
-                    System.out.println("The file already exists and it has been modified to "+ copyName);
-                }
-
-                byte[] downfileBytes = h.download(fileNameDwn);
-
-                if(downfileBytes == null) {
-                    System.out.println("The file does not exist");
-                } else {
-                    FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
-
-                    if(downfileBytes.length != 0) {
-                        fileOuputStream.write(downfileBytes);
-                        fileOuputStream.close();
-                        System.out.println("File: " + fileDestDwn + " downloaded correctly.");
-                    }
-                    else {
-                        System.out.println("Download error!!!!");
-                    }
-                    isCorrectFile = true;
-                }
-
-            } catch (IOException e) {
-
-            }
-        }*/
-    }
-
-
     private static void downloadOption(CallbackServerInterface h) {
 
         boolean isCorrectTitle = false;
@@ -249,19 +205,12 @@ public class Client {
                         for(String str: arrayString) {
                             System.out.println(str);
                         }
-                        String fileInfo = br.readLine();
-                        System.out.println(h.downloadFileString(fileInfo));
+                        String idFile = br.readLine();
+                        System.out.println(h.downloadFileString(idFile));
 
 
                     }
-                }    /*
-                    if(filesWithTitle.size() == 1) {
-                        downloadFile((JSONObject) filesWithTitle.get(0), h);
-                    } else {
-                        JSONObject fileInfo = selectFile(filesWithTitle);
-                        downloadFile(fileInfo, h);
-                    }
-                */
+                }
 
             } catch (IOException e) {
 
@@ -270,7 +219,7 @@ public class Client {
             }
         }
     }
-    
+
     private static JSONObject selectFile(JSONArray filesWithTitle) throws IOException {
         System.out.println("Choose the correct title");
         for (int i = 0; i < filesWithTitle.size(); i++) {
@@ -302,7 +251,43 @@ public class Client {
         return filesWithTitle;
     }
 
-    private static void searchOption() {
+    private static void searchOption(CallbackServerInterface h) {
+        boolean isCorrectDescription = false;
+        while (!isCorrectDescription) {
+            System.out.println("Enter the description to search");
+            try{
+                String fileDescription = br.readLine();
+
+                if(h.getFilesWithTitles(fileDescription).size() == 0) {
+                    System.out.println("Description not found");
+                }
+                else{
+                    isCorrectDescription = true;
+                    if(h.getFilesWithTitles(fileDescription).size() == 1) {
+                        ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileDescription));
+                        for(String title: selectTitleArray) {
+                            System.out.println(title);
+                        }
+                        String idFile = br.readLine();
+
+                        ArrayList<String> infoTitle = h.showFileInfo(h.getFilesList(), idFile);
+                        for(String info: infoTitle) {
+                            System.out.println(info);
+                        }
+
+                    }
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+    private static void searchOptionANTIC() {
+        /*
         boolean isCorrectDescription = false;
         while (!isCorrectDescription) {
             System.out.println("Enter the description to search");
@@ -332,7 +317,7 @@ public class Client {
                 e.printStackTrace();
             }
         }
-
+*/
     }
 
     private static void searchFile(JSONObject jsonObject) {
