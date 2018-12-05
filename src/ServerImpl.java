@@ -204,18 +204,24 @@ public class ServerImpl extends UnicastRemoteObject
     @Override
     public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException {
 
+        ObjectMapper mapper = new ObjectMapper();
         JSONParser parser = new JSONParser();
-        JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
+        String stringJSON = mapper.writeValueAsString(parser.parse(new FileReader(FILE_INFO)));
+
+
+        JSONObject json = (JSONObject) parser.parse(stringJSON);
+        JSONArray filesList = (JSONArray) json.get("dataObjectArraylist");
+        //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
 
         JSONArray filesWithTitle = new JSONArray();
 
         for (Object f : filesList) {
             JSONObject file = (JSONObject) f;
             if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                    file.get("FileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("Tag")).find() ||
+                    file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
+                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("tag")).find() ||
                     Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                            file.get("Name")).find()){
+                            file.get("name")).find()){
                 //System.out.println("Found title");
                 filesWithTitle.add(file);
             } else {
@@ -227,7 +233,7 @@ public class ServerImpl extends UnicastRemoteObject
 
     @Override
     public String downloadFile(JSONObject jsonObject) throws IOException {
-        String fileNameDwn = jsonObject.get("FileName").toString();
+        String fileNameDwn = jsonObject.get("fileName").toString();
         return downloadFileString(fileNameDwn);
 
     }
@@ -271,7 +277,7 @@ public class ServerImpl extends UnicastRemoteObject
         for (int i = 0; i < filesWithTitle.size(); i++) {
             Object f = filesWithTitle.get(i);
             JSONObject file = (JSONObject) f;
-            arrayList.add(file.get("Name") + "[" + file.get("Id") +"] ");
+            arrayList.add(file.get("name") + "[" + file.get("id") +"] ");
         }
         return arrayList;
     }

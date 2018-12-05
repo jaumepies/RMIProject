@@ -12,18 +12,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
-/**
- * This class represents the object client for a
- * distributed object of class ServerImpl,
- * which implements the remote interface 
- * CallbackServerInterface.  It also accepts callback
- * from the server.
- *
- *
- *
- * @author M. L. Liu
- */
-
 public class Client {
 
     static InputStreamReader is = new InputStreamReader(System.in);
@@ -282,41 +270,7 @@ public class Client {
             }
         }
     }
-
-    private static void downloadFile(JSONObject jsonObject, CallbackServerInterface h) throws IOException {
-/*
-        String fileNameDwn = jsonObject.get("FileName").toString();
-        String copyName = fileNameDwn;
-
-        File fileDestDwn = new File("./sharedData/"+fileNameDwn);
-
-        while(fileDestDwn.exists()) {
-            copyName += "1";
-            fileDestDwn = new File("./sharedData/"+copyName);
-        }
-        if(copyName != fileNameDwn) {
-            System.out.println("The file already exists and it has been modified to "+ copyName);
-        }
-
-        byte[] downfileBytes = h.download(fileNameDwn);
-
-        if(downfileBytes == null) {
-            System.out.println("The file does not exist");
-        } else {
-            FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
-
-            if(downfileBytes.length != 0) {
-                fileOuputStream.write(downfileBytes);
-                fileOuputStream.close();
-                System.out.println("File: " + copyName + " downloaded correctly.");
-            }
-            else {
-                System.out.println("Download error!!!!");
-            }
-        }*/
-
-    }
-
+    
     private static JSONObject selectFile(JSONArray filesWithTitle) throws IOException {
         System.out.println("Choose the correct title");
         for (int i = 0; i < filesWithTitle.size(); i++) {
