@@ -289,8 +289,47 @@ public class ServerImpl extends UnicastRemoteObject
 
     @Override
     public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) {
+        JSONObject searchedFile = new JSONObject();
+        for(Object f: filesList) {
+            JSONObject file = (JSONObject) f;
+            if(String.valueOf(file.get("id")).equals(idFile)) {
+                searchedFile = file;
+            }
+        }
         ArrayList<String> fileInfo = new ArrayList<>();
+        fileInfo.add("The title is: " + searchedFile.get("name"));
+        fileInfo.add("The topic description is: " + searchedFile.get("tag"));
+        fileInfo.add("The file name is: " + searchedFile.get("fileName"));
 
         return fileInfo;
+    }
+
+    @Override
+    public String deleteFileInfo(JSONArray filesList, String idFile) {
+                /*
+        ArrayDataObject arrayDataObject = new ArrayDataObject();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
+        arrayDataObject.addDataObject(fileInfo);
+        objectMapper.writeValue(new File(FILE_INFO), arrayDataObject);*/
+        String titleToDelete = "";
+        /*ArrayDataObject arrayDataObj = new ArrayDataObject();
+        ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayDataObject();
+        for (DataObject dataObject : arrayListDataObject) {
+            if(String.valueOf(dataObject.getId()).equals(idFile)) {
+                arrayListDataObject.remove(dataObject);
+                titleToDelete = dataObject.getName();
+            }
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        try {
+            objectMapper.writeValue(new File(FILE_INFO), arrayListDataObject);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
+        return "The title " + titleToDelete + "has been deleted";
     }
 }// end ServerImpl class

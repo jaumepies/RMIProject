@@ -54,4 +54,6 @@ public interface CallbackServerInterface extends Remote {
 
     public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException;
     public JSONArray getFilesList() throws ParseException, IOException;
+
+    public String deleteFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException;
 }

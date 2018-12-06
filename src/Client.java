@@ -19,6 +19,8 @@ public class Client {
     static CallbackClientInterface callbackObj;
     static boolean isFinished = false;
     static final String FILE_INFO = "./fileInfo.json";
+    final public static int BUF_SIZE = 1024 * 64;
+
 
 
 
@@ -103,9 +105,14 @@ public class Client {
                 searchOption(h);
                 return true;
 
-            case "R": //Delete
+            case "R": //Delete or Remove
                 deleteOption(h);
                 return true;
+
+            case "M": //Modify
+                modifyOption(h);
+                return true;
+
 
             case "E": //Exit
                 try {
@@ -121,6 +128,8 @@ public class Client {
         }
     }
 
+
+
     private static void uploadOption(CallbackServerInterface h) {
         boolean isCorrectFile = false;
 
@@ -129,13 +138,13 @@ public class Client {
             try{
                 //Get the file name
                 String fileNameUp = br.readLine();
-                File file = callbackObj.getFile(fileNameUp);
+                File file = getFile(fileNameUp);
 
                 if(file == null) {
                     System.out.println("The file does not exist");
                 } else {
                     //Create a byte array to send
-                    byte[] fileBytes = callbackObj.fileToBytes(file);
+                    byte[] fileBytes = fileToBytes(file);
                     //Get the Destination path
                     File fileDest = new File("./receivedData/"+fileNameUp);
                     String copyName = fileNameUp;
@@ -185,6 +194,53 @@ public class Client {
         return tag;
     }
 
+    private static byte[] fileToBytes(File file) {
+        byte[] bytes = new byte[BUF_SIZE];
+
+        try {
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                System.out.println("El fitxer no existeix");
+                //e.printStackTrace();
+            }
+            //create FileInputStream which obtains input bytes from a file in a file system
+            //FileInputStream is meant for reading streams of raw bytes such as image data. For reading streams of characters, consider using FileReader.
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] buf = new byte[BUF_SIZE];
+            try {
+                for (int readNum; (readNum = fis.read(buf)) != -1;) {
+                    //Writes to this byte array output stream
+                    bos.write(buf, 0, readNum);
+                    // System.out.println("read " + readNum + " bytes,");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            bytes = bos.toByteArray();
+            bos.close(); // should be inside a finally block
+
+
+        } catch (IOException e) {
+            // handle IOException
+            e.printStackTrace();
+        }
+
+        return bytes;
+    }
+
+    private static File getFile(String fileNameUp) {
+        File file = new File("./sharedData/"+fileNameUp);
+        if(file.exists()) {
+            return  file;
+        }
+        return null;
+    }
+
     private static void downloadOption(CallbackServerInterface h) {
 
         boolean isCorrectTitle = false;
@@ -207,8 +263,6 @@ public class Client {
                         }
                         String idFile = br.readLine();
                         System.out.println(h.downloadFileString(idFile));
-
-
                     }
                 }
 
@@ -218,37 +272,6 @@ public class Client {
                 e.printStackTrace();
             }
         }
-    }
-
-    private static JSONObject selectFile(JSONArray filesWithTitle) throws IOException {
-        System.out.println("Choose the correct title");
-        for (int i = 0; i < filesWithTitle.size(); i++) {
-            Object f = filesWithTitle.get(i);
-            JSONObject file = (JSONObject) f;
-            System.out.print(file.get("Name") + "[" + i +"] ");
-        }
-        System.out.println();
-        String selectTitle = br.readLine();
-        return (JSONObject) filesWithTitle.get(Integer.parseInt(selectTitle));
-    }
-
-    private static JSONArray getFilesWithTitles(JSONArray filesList, String fileTitle) {
-        JSONArray filesWithTitle = new JSONArray();
-
-        for (Object f : filesList) {
-            JSONObject file = (JSONObject) f;
-            if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                    file.get("FileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("Tag")).find() ||
-                    Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                            file.get("Name")).find()){
-                //System.out.println("Found title");
-                filesWithTitle.add(file);
-            } else {
-                //System.out.println("Title not found");
-            }
-        }
-        return filesWithTitle;
     }
 
     private static void searchOption(CallbackServerInterface h) {
@@ -263,18 +286,17 @@ public class Client {
                 }
                 else{
                     isCorrectDescription = true;
-                    if(h.getFilesWithTitles(fileDescription).size() == 1) {
-                        ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileDescription));
-                        for(String title: selectTitleArray) {
-                            System.out.println(title);
-                        }
-                        String idFile = br.readLine();
+                    System.out.println("Select the title to search");
 
-                        ArrayList<String> infoTitle = h.showFileInfo(h.getFilesList(), idFile);
-                        for(String info: infoTitle) {
-                            System.out.println(info);
-                        }
+                    ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileDescription));
+                    for(String title: selectTitleArray) {
+                        System.out.println(title);
+                    }
+                    String idFile = br.readLine();
 
+                    ArrayList<String> infoTitle = h.showFileInfo(h.getFilesList(), idFile);
+                    for(String info: infoTitle) {
+                        System.out.println(info);
                     }
                 }
 
@@ -283,51 +305,42 @@ public class Client {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-        }
-
-    }
-    private static void searchOptionANTIC() {
-        /*
-        boolean isCorrectDescription = false;
-        while (!isCorrectDescription) {
-            System.out.println("Enter the description to search");
-            try{
-                String fileText = br.readLine();
-
-                JSONParser parser = new JSONParser();
-                JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
-
-                JSONArray filesWithText = getFilesWithTitles(filesList, fileText);
-
-                if(filesWithText.size() == 0) {
-                    System.out.println("Title not found");
-                } else{
-                    isCorrectDescription = true;
-                    if(filesWithText.size() == 1) {
-                        searchFile((JSONObject) filesWithText.get(0));
-                    } else {
-                        JSONObject fileInfo = selectFile(filesWithText);
-                        searchFile(fileInfo);
-                    }
-                }
-
-            } catch (IOException e) {
-
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
-    private static void searchFile(JSONObject jsonObject) {
-
-        for (int i = 0; i < jsonObject.size(); i++) {
-
         }
     }
 
     private static void deleteOption(CallbackServerInterface h) {
+        boolean isCorrectTitle = false;
+        while (!isCorrectTitle) {
+            System.out.println("Enter the title to delete");
+            try{
+                String fileTitle = br.readLine();
+
+                if(h.getFilesWithTitles(fileTitle).size() == 0) {
+                    System.out.println("Title not found");
+                }
+                else{
+                    isCorrectTitle = true;
+                    System.out.println("Select the title to delete");
+
+                    ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    for(String title: selectTitleArray) {
+                        System.out.println(title);
+                    }
+                    String idFile = br.readLine();
+
+                    System.out.println(h.deleteFileInfo(h.getFilesList(), idFile));
+
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void modifyOption(CallbackServerInterface h) {
     }
 
 }//end class
