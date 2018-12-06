@@ -2,11 +2,6 @@ import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
 
-/**
- * This class implements the remote interface
- * CallbackClientInterface.
- * @author M. L. Liu
- */
 
 public class ClientImpl extends UnicastRemoteObject
         implements CallbackClientInterface {

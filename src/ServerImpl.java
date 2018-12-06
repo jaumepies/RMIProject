@@ -1,16 +1,13 @@
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.corba.se.impl.copyobject.JavaStreamObjectCopierImpl;
+import com.sun.org.apache.regexp.internal.RE;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import javax.xml.crypto.Data;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
@@ -29,8 +26,10 @@ public class ServerImpl extends UnicastRemoteObject
     static FileReader fileReader;
     static JSONArray arrayJSON;
 
-    static final String FILE_INFO = "./fileInfo.json";
+    static final String FILE_INFO = "fileInfo.json";
     static final String COPY_FILE = "./fileInfo2.json";
+
+    static final String FILE_USERS = "users.json";
 
 
 
@@ -51,9 +50,7 @@ public class ServerImpl extends UnicastRemoteObject
         return("hello");
     }
 
-    public synchronized void registerForCallback(
-            CallbackClientInterface callbackClientObject)
-            throws java.rmi.RemoteException{
+    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject) throws java.rmi.RemoteException{
         // store the callback object into the vector
         if (!(clientList.contains(callbackClientObject))) {
             clientList.addElement(callbackClientObject);
@@ -274,5 +271,50 @@ public class ServerImpl extends UnicastRemoteObject
             arrayList.add(file.get("Name") + "[" + file.get("Id") +"] ");
         }
         return arrayList;
+    }
+
+    @Override
+    public boolean checkCorrectUserName(String name) {
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            if (arrayUsers.exists(name)){
+                return false;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    @Override
+    public String registerNewUser(User newUser) throws RemoteException {
+        ArrayUsers arrayUsers = new ArrayUsers();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            arrayUsers.addUser(newUser);
+
+            objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
+
+            System.out.printf("User: "+ newUser.getUserName() + " was registered correctly.");
+            return "User: "+ newUser.getUserName() + " was registered correctly.";
+        } catch (RemoteException e1){
+            e1.printStackTrace();
+            return "Error, registering the new user!!!";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error, registering the new user!!!";
+        }
     }
 }// end ServerImpl class

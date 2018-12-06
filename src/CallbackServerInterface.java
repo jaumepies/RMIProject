@@ -3,18 +3,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.rmi.*;
 import java.util.ArrayList;
-import java.util.BitSet;
 
-/**
- * This is a remote interface for illustrating RMI
- * client callback.
- * @author M. L. Liu
- */
+
 
 public interface CallbackServerInterface extends Remote {
 
@@ -51,4 +44,8 @@ public interface CallbackServerInterface extends Remote {
     public String downloadFileString(String string) throws IOException;
 
     public ArrayList<String> selectFile(JSONArray filesWithTitle)throws java.rmi.RemoteException;
+
+    public boolean checkCorrectUserName(String name) throws java.rmi.RemoteException;
+
+    public String registerNewUser(User newUser)throws java.rmi.RemoteException;
 }

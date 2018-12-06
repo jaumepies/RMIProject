@@ -1,15 +1,12 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
-import java.nio.Buffer;
+import java.net.UnknownServiceException;
 import java.rmi.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.regex.Pattern;
 
 
@@ -19,7 +16,7 @@ public class Client {
     static BufferedReader br = new BufferedReader(is);
     static CallbackClientInterface callbackObj;
     static boolean isFinished = false;
-    static final String FILE_INFO = "./fileInfo.json";
+    static final String FILE_INFO = "fileInfo.json";
 
 
 
@@ -70,10 +67,15 @@ public class Client {
 
 
         } // end try
-        catch (Exception e) {
+        catch (RemoteException e1)
+        {
+            System.out.println(
+                    "Exception in Client: " + e1);
+            // end catch
+        } catch (Exception e) {
             System.out.println(
                     "Exception in Client: " + e);
-        } // end catch
+        }
     } //end main
 
     private static void checkUserOption(CallbackServerInterface h) {
@@ -99,9 +101,9 @@ public class Client {
 
         switch (option){
             case "L": //Login
-
+                logUser(h);
             case "N": //New user
-
+                registNewUser(h);
             case "E": //Exit
                 try {
                     h.unregisterForCallback(callbackObj);
@@ -114,6 +116,78 @@ public class Client {
                 System.out.println("Incorrect option\n");
                 return false;
         }
+    }
+
+    private static void registNewUser(CallbackServerInterface h) {
+        try {
+            String userName, password, confirmation;
+            ArrayList<String> topicList = new ArrayList<String>();
+
+            do{
+                System.out.println("Enter user name:\n");
+                userName = br.readLine();
+
+                if (!h.checkCorrectUserName(userName)){
+                    System.out.println("This name already exists!\n");
+                }
+
+            }while(!h.checkCorrectUserName(userName));
+
+            do {
+                System.out.println("Enter the password:\n");
+                password = br.readLine();
+
+                System.out.println("Confirm the password:\n");
+                confirmation = br.readLine();
+
+                if (!password.equals(confirmation))
+                    System.out.println("Error, the password confirmation must be the same!!:\n");
+            }
+            while (!password.equals(confirmation));
+
+            System.out.println("You want to subscribe to any topic? Yes[Y]/No[N]\n");
+            String opt = br.readLine();
+            if (opt.equals("Y")){
+                System.out.println("Introduce a list of topics(Example: animal, videogame, horror):\n");
+                String strTopics = br.readLine();
+                String[]topicSplited = strTopics.split(",");
+                for (String elem: topicSplited) {
+                    topicList.add(elem.trim());
+                }
+            }
+            User newUser = new User(userName, password);
+            newUser.setSubscriptionList(topicList);
+            System.out.println(h.registerNewUser(newUser));
+
+
+        } catch(RemoteException e1)
+        {
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static void logUser(CallbackServerInterface h) {
+
+        try {
+            System.out.println("Enter user name:\n");
+            String userName = br.readLine();
+
+            System.out.println("Enter the password:\n");
+            String password = br.readLine();
+
+            //h.checkCorrectUser(userName, password);
+
+            callbackObj = new ClientImpl();
+            // register for callback
+            h.registerForCallback(callbackObj);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static void checkCorrectOption(CallbackServerInterface h) {
