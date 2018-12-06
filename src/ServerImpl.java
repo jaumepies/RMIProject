@@ -156,26 +156,16 @@ public class ServerImpl extends UnicastRemoteObject
             fileOuputStream.write(bytes);
             fileOuputStream.close();
 
-            ArrayDataObject arrayDataObject = new ArrayDataObject();
             ObjectMapper objectMapper = new ObjectMapper();
 
-            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
-            arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
+            ArrayDataObject arrayDataObject = getArrayDataObject(objectMapper);
+
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
             arrayDataObject.addDataObject(fileInfo);
 
             objectMapper.writeValue(new File(FILE_INFO), arrayDataObject);
-
-            /*
-            FileWriter filewr = new FileWriter(FILE_INFO);
-
-            arrayJSON.add(fileInfo.createJSONObject());
-
-            filewr.write(String.valueOf(arrayJSON));
-
-            filewr.flush();
-            filewr.close();*/
 
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");
             return "File: " + fileDest.getName() + " uploaded correctly.";
@@ -233,7 +223,8 @@ public class ServerImpl extends UnicastRemoteObject
 
 
         JSONObject json = (JSONObject) parser.parse(stringJSON);
-        return (JSONArray) json.get("dataObjectArraylist");
+        return (JSONArray) json.get("arrayDataObject");
+
     }
 
     @Override
@@ -278,7 +269,6 @@ public class ServerImpl extends UnicastRemoteObject
     @Override
     public ArrayList<String> selectFile(JSONArray filesWithTitle) {
         ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add("Choose the correct title");
         for (int i = 0; i < filesWithTitle.size(); i++) {
             Object f = filesWithTitle.get(i);
             JSONObject file = (JSONObject) f;
@@ -305,31 +295,44 @@ public class ServerImpl extends UnicastRemoteObject
     }
 
     @Override
-    public String deleteFileInfo(JSONArray filesList, String idFile) {
-                /*
-        ArrayDataObject arrayDataObject = new ArrayDataObject();
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
-        arrayDataObject.addDataObject(fileInfo);
-        objectMapper.writeValue(new File(FILE_INFO), arrayDataObject);*/
+    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException {
+
         String titleToDelete = "";
-        /*ArrayDataObject arrayDataObj = new ArrayDataObject();
-        ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayDataObject();
+        ObjectMapper objectMapper = new ObjectMapper();
+        ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
+        ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
         for (DataObject dataObject : arrayListDataObject) {
             if(String.valueOf(dataObject.getId()).equals(idFile)) {
                 arrayListDataObject.remove(dataObject);
                 titleToDelete = dataObject.getName();
             }
         }
-        ObjectMapper objectMapper = new ObjectMapper();
+
         objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         try {
             objectMapper.writeValue(new File(FILE_INFO), arrayListDataObject);
         } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
 
         return "The title " + titleToDelete + "has been deleted";
+    }
+
+    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException {
+
+        ArrayDataObject arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
+        return arrayDataObject;
+    }
+
+    @Override
+    public String getFileName(String idFile) throws IOException, ParseException {
+        JSONArray jsonArray = getFilesList();
+        String fileName = "";
+        for(Object object: jsonArray) {
+            JSONObject infoFile = (JSONObject) object;
+            if(String.valueOf(infoFile.get("id")).equals(idFile))
+                fileName = (String) infoFile.get("fileName");
+        }
+        return fileName;
     }
 }// end ServerImpl class

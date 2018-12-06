@@ -5,9 +5,13 @@ public class ArrayDataObject {
 
     public ArrayDataObject() {
 
-        dataObjectArraylist = new ArrayList<DataObject>();
+        this.dataObjectArraylist = new ArrayList<DataObject>();
     }
     public void addDataObject(DataObject dataObject) {
-        dataObjectArraylist.add(dataObject);
+        this.dataObjectArraylist.add(dataObject);
+    }
+
+    public ArrayList<DataObject> getArrayListDataObject() {
+        return this.dataObjectArraylist;
     }
 }

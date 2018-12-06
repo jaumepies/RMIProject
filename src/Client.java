@@ -76,7 +76,7 @@ public class Client {
         while(!correctOption){
 
             System.out.println("\nChoose your option:");
-            System.out.println("Download[D] Upload[U] Search[S] Delete[R] Exit[E]");
+            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Exit[E]");
 
             String option = "";
             try {
@@ -262,7 +262,8 @@ public class Client {
                             System.out.println(str);
                         }
                         String idFile = br.readLine();
-                        System.out.println(h.downloadFileString(idFile));
+                        String fileName = h.getFileName(idFile);
+                        System.out.println(h.downloadFileString(fileName));
                     }
                 }
 
@@ -328,7 +329,9 @@ public class Client {
                     }
                     String idFile = br.readLine();
 
-                    System.out.println(h.deleteFileInfo(h.getFilesList(), idFile));
+                    String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile);
+
+                    System.out.println(deleteInfo);
 
                 }
 
