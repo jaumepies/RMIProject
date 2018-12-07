@@ -18,7 +18,5 @@ public interface CallbackClientInterface
     public String notifyMe(String message)
             throws java.rmi.RemoteException;
 
-    public File getFile(String fileName) throws java.rmi.RemoteException;
-    public byte[] fileToBytes(File file) throws java.rmi.RemoteException;
 
 } // end interface

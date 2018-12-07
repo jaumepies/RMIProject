@@ -186,18 +186,19 @@ public class ServerImpl extends UnicastRemoteObject
     @Override
     public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException {
 
-        JSONParser parser = new JSONParser();
-        JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
+
+        JSONArray filesList = getFilesList();
+        //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
 
         JSONArray filesWithTitle = new JSONArray();
 
         for (Object f : filesList) {
             JSONObject file = (JSONObject) f;
             if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                    file.get("FileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("Tag")).find() ||
+                    file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
+                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("tag")).find() ||
                     Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                            file.get("Name")).find()){
+                            file.get("name")).find()){
                 //System.out.println("Found title");
                 filesWithTitle.add(file);
             } else {
@@ -207,9 +208,20 @@ public class ServerImpl extends UnicastRemoteObject
         return filesWithTitle;
     }
 
+    public JSONArray getFilesList() throws ParseException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JSONParser parser = new JSONParser();
+        String stringJSON = mapper.writeValueAsString(parser.parse(new FileReader(FILE_INFO)));
+
+
+        JSONObject json = (JSONObject) parser.parse(stringJSON);
+        return (JSONArray) json.get("arrayDataObject");
+
+    }
+
     @Override
     public String downloadFile(JSONObject jsonObject) throws IOException {
-        String fileNameDwn = jsonObject.get("FileName").toString();
+        String fileNameDwn = jsonObject.get("fileName").toString();
         return downloadFileString(fileNameDwn);
 
     }
@@ -249,11 +261,10 @@ public class ServerImpl extends UnicastRemoteObject
     @Override
     public ArrayList<String> selectFile(JSONArray filesWithTitle) {
         ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add("Choose the correct title");
         for (int i = 0; i < filesWithTitle.size(); i++) {
             Object f = filesWithTitle.get(i);
             JSONObject file = (JSONObject) f;
-            arrayList.add(file.get("Name") + "[" + file.get("Id") +"] ");
+            arrayList.add(file.get("name") + "[" + file.get("id") +"] ");
         }
         return arrayList;
     }
@@ -324,5 +335,64 @@ public class ServerImpl extends UnicastRemoteObject
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) {
+        JSONObject searchedFile = new JSONObject();
+        for(Object f: filesList) {
+            JSONObject file = (JSONObject) f;
+            if(String.valueOf(file.get("id")).equals(idFile)) {
+                searchedFile = file;
+            }
+        }
+        ArrayList<String> fileInfo = new ArrayList<>();
+        fileInfo.add("The title is: " + searchedFile.get("name"));
+        fileInfo.add("The topic description is: " + searchedFile.get("tag"));
+        fileInfo.add("The file name is: " + searchedFile.get("fileName"));
+
+        return fileInfo;
+    }
+
+    @Override
+    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException {
+
+        String titleToDelete = "";
+        ObjectMapper objectMapper = new ObjectMapper();
+        ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
+        ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
+        for (DataObject dataObject : arrayListDataObject) {
+            if(String.valueOf(dataObject.getId()).equals(idFile)) {
+                arrayListDataObject.remove(dataObject);
+                titleToDelete = dataObject.getName();
+            }
+        }
+
+        objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        try {
+            objectMapper.writeValue(new File(FILE_INFO), arrayListDataObject);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "The title " + titleToDelete + "has been deleted";
+    }
+
+    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException {
+
+        ArrayDataObject arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
+        return arrayDataObject;
+    }
+
+    @Override
+    public String getFileName(String idFile) throws IOException, ParseException {
+        JSONArray jsonArray = getFilesList();
+        String fileName = "";
+        for(Object object: jsonArray) {
+            JSONObject infoFile = (JSONObject) object;
+            if(String.valueOf(infoFile.get("id")).equals(idFile))
+                fileName = (String) infoFile.get("fileName");
+        }
+        return fileName;
     }
 }// end ServerImpl class

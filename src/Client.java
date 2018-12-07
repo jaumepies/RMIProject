@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -16,7 +17,9 @@ public class Client {
     static BufferedReader br = new BufferedReader(is);
     static CallbackClientInterface callbackObj;
     static boolean isFinished = false;
-    static final String FILE_INFO = "fileInfo.json";
+    static final String FILE_INFO = "./fileInfo.json";
+    final public static int BUF_SIZE = 1024 * 64;
+
 
 
 
@@ -205,7 +208,7 @@ public class Client {
         while(!correctOption){
 
             System.out.println("\nChoose your option:");
-            System.out.println("Download[D] Upload[U] Search[S] Delete[R] Exit[E]");
+            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Exit[E]");
 
             String option = "";
             try {
@@ -231,12 +234,17 @@ public class Client {
                 return true;
 
             case "S": //Search
-                searchOption();
+                searchOption(h);
                 return true;
 
-            case "R": //Delete
+            case "R": //Delete or Remove
                 deleteOption(h);
                 return true;
+
+            case "M": //Modify
+                modifyOption(h);
+                return true;
+
 
             case "E": //Exit
                 try {
@@ -260,13 +268,13 @@ public class Client {
             try{
                 //Get the file name
                 String fileNameUp = br.readLine();
-                File file = callbackObj.getFile(fileNameUp);
+                File file = getFile(fileNameUp);
 
                 if(file == null) {
                     System.out.println("The file does not exist");
                 } else {
                     //Create a byte array to send
-                    byte[] fileBytes = callbackObj.fileToBytes(file);
+                    byte[] fileBytes = fileToBytes(file);
                     //Get the Destination path
                     File fileDest = new File("./receivedData/"+fileNameUp);
                     String copyName = fileNameUp;
@@ -316,49 +324,53 @@ public class Client {
         return tag;
     }
 
+    private static byte[] fileToBytes(File file) {
+        byte[] bytes = new byte[BUF_SIZE];
 
-    private static void downloadOptionANTIC(CallbackServerInterface h) {
-        /*
-        boolean isCorrectFile = false;
-        while (!isCorrectFile) {
-            System.out.println("Enter the filename to download");
-            try{
-                String fileNameDwn = br.readLine();
-                String copyName = fileNameDwn;
-                File fileDestDwn = new File("./sharedData/"+fileNameDwn);
+        try {
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                System.out.println("El fitxer no existeix");
+                //e.printStackTrace();
+            }
+            //create FileInputStream which obtains input bytes from a file in a file system
+            //FileInputStream is meant for reading streams of raw bytes such as image data. For reading streams of characters, consider using FileReader.
 
-                while(fileDestDwn.exists()) {
-                    copyName += "1";
-                    fileDestDwn = new File("./sharedData/"+copyName);
-                }
-                if(copyName != fileNameDwn) {
-                    System.out.println("The file already exists and it has been modified to "+ copyName);
-                }
-
-                byte[] downfileBytes = h.download(fileNameDwn);
-
-                if(downfileBytes == null) {
-                    System.out.println("The file does not exist");
-                } else {
-                    FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
-
-                    if(downfileBytes.length != 0) {
-                        fileOuputStream.write(downfileBytes);
-                        fileOuputStream.close();
-                        System.out.println("File: " + fileDestDwn + " downloaded correctly.");
-                    }
-                    else {
-                        System.out.println("Download error!!!!");
-                    }
-                    isCorrectFile = true;
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] buf = new byte[BUF_SIZE];
+            try {
+                for (int readNum; (readNum = fis.read(buf)) != -1;) {
+                    //Writes to this byte array output stream
+                    bos.write(buf, 0, readNum);
+                    // System.out.println("read " + readNum + " bytes,");
                 }
 
             } catch (IOException e) {
-
+                e.printStackTrace();
             }
-        }*/
+
+            bytes = bos.toByteArray();
+            bos.close(); // should be inside a finally block
+
+
+        } catch (IOException e) {
+            // handle IOException
+            e.printStackTrace();
+        }
+
+        return bytes;
     }
 
+    private static File getFile(String fileNameUp) {
+        File file = new File("./sharedData/"+fileNameUp);
+        if(file.exists()) {
+            return  file;
+        }
+        return null;
+    }
 
     private static void downloadOption(CallbackServerInterface h) {
 
@@ -380,114 +392,9 @@ public class Client {
                         for(String str: arrayString) {
                             System.out.println(str);
                         }
-                        String fileInfo = br.readLine();
-                        System.out.println(h.downloadFileString(fileInfo));
-
-
-                    }
-                }    /*
-                    if(filesWithTitle.size() == 1) {
-                        downloadFile((JSONObject) filesWithTitle.get(0), h);
-                    } else {
-                        JSONObject fileInfo = selectFile(filesWithTitle);
-                        downloadFile(fileInfo, h);
-                    }
-                */
-
-            } catch (IOException e) {
-
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private static void downloadFile(JSONObject jsonObject, CallbackServerInterface h) throws IOException {
-/*
-        String fileNameDwn = jsonObject.get("FileName").toString();
-        String copyName = fileNameDwn;
-
-        File fileDestDwn = new File("./sharedData/"+fileNameDwn);
-
-        while(fileDestDwn.exists()) {
-            copyName += "1";
-            fileDestDwn = new File("./sharedData/"+copyName);
-        }
-        if(copyName != fileNameDwn) {
-            System.out.println("The file already exists and it has been modified to "+ copyName);
-        }
-
-        byte[] downfileBytes = h.download(fileNameDwn);
-
-        if(downfileBytes == null) {
-            System.out.println("The file does not exist");
-        } else {
-            FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
-
-            if(downfileBytes.length != 0) {
-                fileOuputStream.write(downfileBytes);
-                fileOuputStream.close();
-                System.out.println("File: " + copyName + " downloaded correctly.");
-            }
-            else {
-                System.out.println("Download error!!!!");
-            }
-        }*/
-
-    }
-
-    private static JSONObject selectFile(JSONArray filesWithTitle) throws IOException {
-        System.out.println("Choose the correct title");
-        for (int i = 0; i < filesWithTitle.size(); i++) {
-            Object f = filesWithTitle.get(i);
-            JSONObject file = (JSONObject) f;
-            System.out.print(file.get("Name") + "[" + i +"] ");
-        }
-        System.out.println();
-        String selectTitle = br.readLine();
-        return (JSONObject) filesWithTitle.get(Integer.parseInt(selectTitle));
-    }
-
-    private static JSONArray getFilesWithTitles(JSONArray filesList, String fileTitle) {
-        JSONArray filesWithTitle = new JSONArray();
-
-        for (Object f : filesList) {
-            JSONObject file = (JSONObject) f;
-            if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                    file.get("FileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("Tag")).find() ||
-                    Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                            file.get("Name")).find()){
-                //System.out.println("Found title");
-                filesWithTitle.add(file);
-            } else {
-                //System.out.println("Title not found");
-            }
-        }
-        return filesWithTitle;
-    }
-
-    private static void searchOption() {
-        boolean isCorrectDescription = false;
-        while (!isCorrectDescription) {
-            System.out.println("Enter the description to search");
-            try{
-                String fileText = br.readLine();
-
-                JSONParser parser = new JSONParser();
-                JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
-
-                JSONArray filesWithText = getFilesWithTitles(filesList, fileText);
-
-                if(filesWithText.size() == 0) {
-                    System.out.println("Title not found");
-                } else{
-                    isCorrectDescription = true;
-                    if(filesWithText.size() == 1) {
-                        searchFile((JSONObject) filesWithText.get(0));
-                    } else {
-                        JSONObject fileInfo = selectFile(filesWithText);
-                        searchFile(fileInfo);
+                        String idFile = br.readLine();
+                        String fileName = h.getFileName(idFile);
+                        System.out.println(h.downloadFileString(fileName));
                     }
                 }
 
@@ -497,17 +404,77 @@ public class Client {
                 e.printStackTrace();
             }
         }
-
     }
 
-    private static void searchFile(JSONObject jsonObject) {
+    private static void searchOption(CallbackServerInterface h) {
+        boolean isCorrectDescription = false;
+        while (!isCorrectDescription) {
+            System.out.println("Enter the description to search");
+            try{
+                String fileDescription = br.readLine();
 
-        for (int i = 0; i < jsonObject.size(); i++) {
+                if(h.getFilesWithTitles(fileDescription).size() == 0) {
+                    System.out.println("Description not found");
+                }
+                else{
+                    isCorrectDescription = true;
+                    System.out.println("Select the title to search");
 
+                    ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileDescription));
+                    for(String title: selectTitleArray) {
+                        System.out.println(title);
+                    }
+                    String idFile = br.readLine();
+
+                    ArrayList<String> infoTitle = h.showFileInfo(h.getFilesList(), idFile);
+                    for(String info: infoTitle) {
+                        System.out.println(info);
+                    }
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private static void deleteOption(CallbackServerInterface h) {
+        boolean isCorrectTitle = false;
+        while (!isCorrectTitle) {
+            System.out.println("Enter the title to delete");
+            try{
+                String fileTitle = br.readLine();
+
+                if(h.getFilesWithTitles(fileTitle).size() == 0) {
+                    System.out.println("Title not found");
+                }
+                else{
+                    isCorrectTitle = true;
+                    System.out.println("Select the title to delete");
+
+                    ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    for(String title: selectTitleArray) {
+                        System.out.println(title);
+                    }
+                    String idFile = br.readLine();
+
+                    String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile);
+
+                    System.out.println(deleteInfo);
+
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void modifyOption(CallbackServerInterface h) {
     }
 
 }//end class

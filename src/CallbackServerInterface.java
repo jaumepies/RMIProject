@@ -50,4 +50,12 @@ public interface CallbackServerInterface extends Remote {
     public String registerNewUser(User newUser)throws java.rmi.RemoteException;
 
     public boolean checkCorrectUser(String userName, String password)throws java.rmi.RemoteException;
+
+    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException;
+    public JSONArray getFilesList() throws ParseException, IOException;
+
+    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException;
+
+    public String getFileName(String idFile) throws IOException, ParseException;
+    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException;
 }
