@@ -11,6 +11,7 @@ import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
@@ -29,12 +30,14 @@ public class ServerImpl extends UnicastRemoteObject
 
 
     private Vector clientList;
+    private HashMap<Integer, CallbackClientInterface> clientHash;
     final public static int BUF_SIZE = 1024 * 64;
 
 
     public ServerImpl() throws RemoteException {
         super( );
         clientList = new Vector();
+        clientHash  = new HashMap<Integer, CallbackClientInterface>();
 
         arrayJSON = new JSONArray();
 
@@ -45,13 +48,37 @@ public class ServerImpl extends UnicastRemoteObject
         return("hello");
     }
 
-    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject) throws java.rmi.RemoteException{
+    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject, String userName) throws java.rmi.RemoteException{
         // store the callback object into the vector
+        //carrega id del usuari
+        Integer idUser = getIdFromUser(userName);
         if (!(clientList.contains(callbackClientObject))) {
             clientList.addElement(callbackClientObject);
             System.out.println("Registered new client ");
             doCallbacks();
         } // end if
+    }
+
+    private Integer getIdFromUser(String userName) {
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            for (User user: arrayUsers.usersArrayList) {
+                if(user.getUserName().equals(userName)){
+                    return user.getUserId();
+                }
+            }
+            return -1;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 
     // This remote method allows an object client to

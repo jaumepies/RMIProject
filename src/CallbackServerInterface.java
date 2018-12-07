@@ -21,9 +21,7 @@ public interface CallbackServerInterface extends Remote {
 //        object of the client; to be used by the server
 //        to make its callbacks.
 
-    public void registerForCallback(
-            CallbackClientInterface callbackClientObject
-    ) throws java.rmi.RemoteException;
+    public void registerForCallback(CallbackClientInterface callbackClientObject, String userName) throws java.rmi.RemoteException;
 
 // This remote method allows an object client to
 // cancel its registration for callback
