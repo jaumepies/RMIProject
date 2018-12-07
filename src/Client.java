@@ -42,16 +42,11 @@ public class Client {
             // find the remote object and cast it to an
             //   interface object
             CallbackServerInterface h = (CallbackServerInterface)Naming.lookup(registryURL);
+            System.out.println("Lookup completed " );
+            System.out.println("Server said " + h.sayHello());
             while(!isFinished) {
                 checkUserOption(h);
             }
-
-            System.out.println("Lookup completed " );
-            System.out.println("Server said " + h.sayHello());
-            callbackObj = new ClientImpl();
-            // register for callback
-            h.registerForCallback(callbackObj);
-            System.out.println("Registered for callback.");
             /*try {
                 Thread.sleep(time * 1000);
             }
@@ -59,10 +54,6 @@ public class Client {
             }
             h.unregisterForCallback(callbackObj);
             System.out.println("Unregistered for callback.");*/
-            //Aquesta part s'ha de canviar, la ficarem un cop fet el LOGIN!!!!!!!
-            while(!isFinished){
-                checkCorrectOption(h);
-            }
             System.out.println("Execution finished");
 
 
@@ -80,30 +71,32 @@ public class Client {
 
     private static void checkUserOption(CallbackServerInterface h) {
         boolean correctOption = false;
+        String option = "";
 
-        while(!correctOption){
+        while(!option.equals("E") ){
 
             System.out.println("\nChoose your option:");
             System.out.println("Login[L] New User[N] Exit[E]");
 
-            String option = "";
             try {
                 option = br.readLine();
             } catch (IOException e) {
             }
 
-            correctOption= isCorrectUserOption(option, h);
+            isCorrectUserOption(option, h);
 
         }
     }
 
-    private static boolean isCorrectUserOption(String option, CallbackServerInterface h) {
+    private static void isCorrectUserOption(String option, CallbackServerInterface h) {
 
         switch (option){
             case "L": //Login
                 logUser(h);
+                break;
             case "N": //New user
                 registNewUser(h);
+                break;
             case "E": //Exit
                 try {
                     h.unregisterForCallback(callbackObj);
@@ -111,10 +104,9 @@ public class Client {
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-                return true;
+                break;
             default:
                 System.out.println("Incorrect option\n");
-                return false;
         }
     }
 
@@ -172,17 +164,33 @@ public class Client {
     private static void logUser(CallbackServerInterface h) {
 
         try {
-            System.out.println("Enter user name:\n");
-            String userName = br.readLine();
+            String userName, password;
+            boolean correctUser;
+            do{
+                System.out.println("Enter user name:");
+                userName = br.readLine();
 
-            System.out.println("Enter the password:\n");
-            String password = br.readLine();
+                System.out.println("Enter the password:");
+                password = br.readLine();
+                correctUser = h.checkCorrectUser(userName, password);
+                if(!correctUser){
+                    System.out.println("User name or password incorrect!");
+                    System.out.println("Try it again...");
+                }
+            }while(!correctUser);
 
-            //h.checkCorrectUser(userName, password);
+            if(correctUser){
+                callbackObj = new ClientImpl();
+                // register for callback
+                h.registerForCallback(callbackObj);
+                System.out.println("User connected and registered for a callback.");
 
-            callbackObj = new ClientImpl();
-            // register for callback
-            h.registerForCallback(callbackObj);
+                while(!isFinished){
+                    checkCorrectOption(h);
+                }
+            }
+
+
 
         } catch (IOException e) {
             e.printStackTrace();

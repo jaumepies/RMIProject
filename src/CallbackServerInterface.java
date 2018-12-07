@@ -48,4 +48,6 @@ public interface CallbackServerInterface extends Remote {
     public boolean checkCorrectUserName(String name) throws java.rmi.RemoteException;
 
     public String registerNewUser(User newUser)throws java.rmi.RemoteException;
+
+    public boolean checkCorrectUser(String userName, String password)throws java.rmi.RemoteException;
 }

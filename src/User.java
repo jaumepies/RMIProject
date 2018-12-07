@@ -8,6 +8,8 @@ public class User implements java.io.Serializable {
 
     private static int nextId = 0;
 
+    public User(){}
+
     public User(String userName, String password) {
         this.userName = userName;
         this.password = password;

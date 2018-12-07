@@ -14,11 +14,6 @@ import java.util.ArrayList;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
-/**
- * This class implements the remote interface
- * CallbackServerInterface.
- * @author M. L. Liu
- */
 
 public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
@@ -164,16 +159,6 @@ public class ServerImpl extends UnicastRemoteObject
 
             objectMapper.writeValue(new File(FILE_INFO), arrayDataObject);
 
-            /*
-            FileWriter filewr = new FileWriter(FILE_INFO);
-
-            arrayJSON.add(fileInfo.createJSONObject());
-
-            filewr.write(String.valueOf(arrayJSON));
-
-            filewr.flush();
-            filewr.close();*/
-
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");
             return "File: " + fileDest.getName() + " uploaded correctly.";
         }  catch (IOException e) {
@@ -315,6 +300,29 @@ public class ServerImpl extends UnicastRemoteObject
         } catch (IOException e) {
             e.printStackTrace();
             return "Error, registering the new user!!!";
+        }
+    }
+
+    @Override
+    public boolean checkCorrectUser(String userName, String password) {
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            for (User user: arrayUsers.usersArrayList) {
+                if(user.getUserName().equals(userName) && user.getPassword().equals(password)){
+                    return true;
+                }
+            }
+            return false;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }// end ServerImpl class
