@@ -151,7 +151,7 @@ public class ServerImpl extends UnicastRemoteObject
             ArrayDataObject arrayDataObject = new ArrayDataObject();
             ObjectMapper objectMapper = new ObjectMapper();
 
-            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
             arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
 
@@ -215,7 +215,7 @@ public class ServerImpl extends UnicastRemoteObject
 
 
         JSONObject json = (JSONObject) parser.parse(stringJSON);
-        return (JSONArray) json.get("arrayDataObject");
+        return (JSONArray) json.get("arrayListDataObject");
 
     }
 
