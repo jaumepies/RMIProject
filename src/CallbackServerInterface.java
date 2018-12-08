@@ -63,4 +63,5 @@ public interface CallbackServerInterface extends Remote {
     public String getUserFromId(int idUser) throws RemoteException;
 
 
+    public String changeFileTitle(String oldTitle, String newTitle, String currentUser) throws RemoteException;
 }

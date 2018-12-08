@@ -210,7 +210,7 @@ public class Client {
         while(!correctOption){
 
             System.out.println("\nChoose your option:");
-            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Log Out[L]");
+            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Change[C] Manage Subscriptions[M] Log Out[L]");
 
             String option = "";
             try {
@@ -243,8 +243,12 @@ public class Client {
                 deleteOption(h);
                 return true;
 
-            case "M": //Modify
-                modifyOption(h);
+            case "C": //Change
+                changeOption(h);
+                return true;
+
+            case "M": //Manage Subscription
+                manageSubscriptionOption(h);
                 return true;
 
 
@@ -484,10 +488,6 @@ public class Client {
                     else{
                         deleteOption(h);
                     }
-
-
-
-
                 }
 
             } catch (IOException e) {
@@ -498,7 +498,84 @@ public class Client {
         }
     }
 
-    private static void modifyOption(CallbackServerInterface h) {
+    private static void changeOption(CallbackServerInterface h){
+
+        try {
+            boolean isCorrectOption = false;
+            while (!isCorrectOption) {
+                System.out.println("Return to menu[R] Change Title[T] Change Description[D]");
+                String option = br.readLine();
+                switch (option){
+                    case "R":
+                        checkCorrectOption(h);
+                        //isCorrectOption = true;
+                        break;
+
+                    case "T":
+                        changeTitle(h);
+                        //isCorrectOption = true;
+                        break;
+
+                    case "D":
+                        changeDescription(h);
+                        //isCorrectOption = true;
+                        break;
+
+                    default:
+                        System.out.println("Incorrect option");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
+
+    private static void changeTitle(CallbackServerInterface h) {
+        boolean isCorrectTitle = false;
+        while (!isCorrectTitle) {
+            System.out.println("Enter the title to modify");
+            try{
+                String fileTitle = br.readLine();
+
+                if(h.getFilesWithTitles(fileTitle).size() == 0) {
+                    System.out.println("Title not found");
+                }
+                else{
+                    isCorrectTitle = true;
+
+                    String newTitle ="";
+                    ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    System.out.println("Return to menu[R]");
+                    for(String str: listWithTitles) {
+                        System.out.println(str);
+                    }
+                    String idFile = br.readLine();
+                    if (idFile.equals("R")){
+                        checkCorrectOption(h);
+                    } else{
+                        System.out.println("Enter the new title");
+                         newTitle = br.readLine();
+                    }
+                    String oldTitle = h.getFileName(idFile);
+                    System.out.println(h.changeFileTitle(oldTitle, newTitle, currentUserName));
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void changeDescription(CallbackServerInterface h) {
+    }
+
+    private static void manageSubscriptionOption(CallbackServerInterface h) {
+    }
+
+
 
 }//end class
