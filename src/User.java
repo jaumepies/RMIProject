@@ -6,15 +6,12 @@ public class User implements java.io.Serializable {
     private int userId;
     private ArrayList<String> subscriptionList;
 
-    private static int nextId = 0;
-
     public User(){}
 
-    public User(String userName, String password) {
+    public User(String userName, String password, int userId) {
         this.userName = userName;
         this.password = password;
-        this.userId = nextId;
-        nextId++;
+        this.userId = userId;
     }
 
     public String getUserName() {

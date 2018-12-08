@@ -150,7 +150,8 @@ public class Client {
                     topicList.add(elem.trim());
                 }
             }
-            User newUser = new User(userName, password);
+            int lastid = h.getLastIdFromUsers();
+            User newUser = new User(userName, password, lastid+1);
             newUser.setSubscriptionList(topicList);
             System.out.println(h.registerNewUser(newUser));
 
@@ -185,7 +186,7 @@ public class Client {
             if(correctUser){
                 callbackObj = new ClientImpl();
                 // register for callback
-                h.registerForCallback(callbackObj);
+                h.registerForCallback(callbackObj, userName);
                 System.out.println("User connected and registered for a callback.");
 
                 while(!isFinished){

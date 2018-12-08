@@ -13,4 +13,4 @@ TODO list:
         ->Al metode "registerForCallback" tenir en compte el usuari conectat actualment.
         ->Al metode "unregisterForCallback" eliminar el usuari que s'ha desconectat.
         ->Quan es fa un Upload cridar al "notifyMe" de cada client que te la subscripcio del objecte carregat.
-
+        ->Sincronitzacio (semafors). UPDATE I DOWNLOAD.
