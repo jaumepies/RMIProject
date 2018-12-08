@@ -21,7 +21,7 @@ public interface CallbackServerInterface extends Remote {
 //        object of the client; to be used by the server
 //        to make its callbacks.
 
-    public void registerForCallback(CallbackClientInterface callbackClientObject, String userName) throws java.rmi.RemoteException;
+    public void registerForCallback(CallbackClientInterface callbackClientObject) throws java.rmi.RemoteException;
 
 // This remote method allows an object client to
 // cancel its registration for callback
@@ -33,7 +33,7 @@ public interface CallbackServerInterface extends Remote {
     public byte[] fileToBytes(File file) throws java.rmi.RemoteException;
     public File getFileToDownload(String fileName) throws java.rmi.RemoteException;
 
-    public String upload(byte[] bytes, File fileDest, String name, String tag)throws java.rmi.RemoteException;
+    public String upload(byte[] bytes, File fileDest, String name, String tag, int idUser)throws java.rmi.RemoteException;
 
     public byte[] download(String name)throws java.rmi.RemoteException;
 
@@ -59,6 +59,5 @@ public interface CallbackServerInterface extends Remote {
     public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException;
 
     public int getLastIdFromUsers() throws RemoteException;
-
     public int getIdFromUser(String userName) throws RemoteException;
 }
