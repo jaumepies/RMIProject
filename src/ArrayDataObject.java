@@ -14,4 +14,8 @@ public class ArrayDataObject {
     public ArrayList<DataObject> getArrayListDataObject() {
         return this.dataObjectArraylist;
     }
+
+    public void setArrayDataObject(ArrayList<DataObject> arrayListDataObject) {
+        this.dataObjectArraylist = arrayListDataObject;
+    }
 }

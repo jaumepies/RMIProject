@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import static  java.lang.Math.toIntExact;
+import static java.lang.Math.toIntExact;
 
 public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
@@ -27,6 +27,7 @@ public class ServerImpl extends UnicastRemoteObject
 
     static final String FILE_USERS = "users.json";
     static final String FILE_LASTIDUSER= "lastiduser.json";
+    static final String FILE_LASTIDFILE= "lastidfile.json";
 
 
 
@@ -48,10 +49,10 @@ public class ServerImpl extends UnicastRemoteObject
         return("hello");
     }
 
-    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject, String userName) throws java.rmi.RemoteException{
+    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject) throws java.rmi.RemoteException{
         // store the callback object into the vector
         //carrega id del usuari
-        Integer idUser = getIdFromUser(userName);
+        //Integer idUser = getIdFromUser(userName);
         if (!(clientList.contains(callbackClientObject))) {
             clientList.addElement(callbackClientObject);
             System.out.println("Registered new client ");
@@ -167,11 +168,14 @@ public class ServerImpl extends UnicastRemoteObject
     }
 
     @Override
-    public String upload(byte[] bytes, File fileDest, String name, String tag) {
+    public String upload(byte[] bytes, File fileDest, String name, String tag, int idUser) {
 
         try {
             FileOutputStream fileOuputStream = new FileOutputStream(fileDest);
-            DataObject fileInfo = new DataObject(name, tag, fileDest.getName());
+            int idFile = getLastIdFromFile();
+            updateLastIdFile(idFile);
+
+            DataObject fileInfo = new DataObject(name, tag, fileDest.getName(), idUser, idFile);
             fileOuputStream.write(bytes);
             fileOuputStream.close();
 
@@ -365,6 +369,53 @@ public class ServerImpl extends UnicastRemoteObject
         }
     }
 
+    private void updateLastIdFile(int newId) {
+        JSONParser jsonParser = new JSONParser();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try
+        {
+            Object obj = jsonParser.parse(new FileReader(FILE_LASTIDFILE));
+
+            JSONObject jsonObject = (JSONObject) obj;
+
+            int lastId = toIntExact((Long) jsonObject.get("lastIdFile"));
+            if (lastId != newId){
+                jsonObject.put("lastIdFile", newId);
+
+                objectMapper.writeValue(new File(FILE_LASTIDFILE), jsonObject);
+            }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public int getLastIdFromFile() throws RemoteException{
+        JSONParser jsonParser = new JSONParser();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try
+        {
+            Object obj = jsonParser.parse(new FileReader(FILE_LASTIDFILE));
+
+            JSONObject jsonObject = (JSONObject) obj;
+            if(jsonObject.size() == 0) {
+                jsonObject.put("lastIdFile", 1);
+                objectMapper.writeValue(new File(FILE_LASTIDFILE), jsonObject);
+                return 1;
+            }
+            else{
+                int newId = toIntExact((Long) jsonObject.get("lastIdFile"))+1;
+                return newId;
+            }
+
+
+        }catch(Exception e){
+            e.printStackTrace();
+            return -1;
+        }
+
+    }
+
     public int getLastIdFromUsers() throws RemoteException{
         JSONParser jsonParser = new JSONParser();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -434,19 +485,24 @@ public class ServerImpl extends UnicastRemoteObject
     public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException {
 
         String titleToDelete = "";
+
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
         ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
+
         for (DataObject dataObject : arrayListDataObject) {
             if(String.valueOf(dataObject.getId()).equals(idFile)) {
-                arrayListDataObject.remove(dataObject);
                 titleToDelete = dataObject.getName();
+                arrayListDataObject.remove(dataObject);
+                break;
+
             }
         }
+        arrayDataObj.setArrayDataObject(arrayListDataObject);
 
-        objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         try {
-            objectMapper.writeValue(new File(FILE_INFO), arrayListDataObject);
+            objectMapper.writeValue(new File(FILE_INFO), arrayDataObj);
         } catch (IOException e) {
             e.printStackTrace();
         }

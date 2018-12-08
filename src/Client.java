@@ -17,6 +17,9 @@ public class Client {
     static BufferedReader br = new BufferedReader(is);
     static CallbackClientInterface callbackObj;
     static boolean isFinished = false;
+    static boolean endExecution = false;
+
+    static String currentUserName;
     static final String FILE_INFO = "./fileInfo.json";
     final public static int BUF_SIZE = 1024 * 64;
 
@@ -47,7 +50,7 @@ public class Client {
             CallbackServerInterface h = (CallbackServerInterface)Naming.lookup(registryURL);
             System.out.println("Lookup completed " );
             System.out.println("Server said " + h.sayHello());
-            while(!isFinished) {
+            while(!endExecution) {
                 checkUserOption(h);
             }
             /*try {
@@ -76,8 +79,8 @@ public class Client {
         boolean correctOption = false;
         String option = "";
 
-        while(!option.equals("E") ){
-
+        while(!correctOption){
+            isFinished=false;
             System.out.println("\nChoose your option:");
             System.out.println("Login[L] New User[N] Exit[E]");
 
@@ -86,30 +89,27 @@ public class Client {
             } catch (IOException e) {
             }
 
-            isCorrectUserOption(option, h);
+            correctOption = isCorrectUserOption(option, h);
 
         }
     }
 
-    private static void isCorrectUserOption(String option, CallbackServerInterface h) {
+    private static boolean isCorrectUserOption(String option, CallbackServerInterface h) {
 
         switch (option){
             case "L": //Login
                 logUser(h);
-                break;
+                return false;
             case "N": //New user
                 registNewUser(h);
-                break;
+                return false;
             case "E": //Exit
-                try {
-                    h.unregisterForCallback(callbackObj);
-                    isFinished = true;
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-                break;
+                //h.unregisterForCallback(callbackObj);
+                endExecution = true;
+                return true;
             default:
                 System.out.println("Incorrect option\n");
+                return false;
         }
     }
 
@@ -119,7 +119,7 @@ public class Client {
             ArrayList<String> topicList = new ArrayList<String>();
 
             do{
-                System.out.println("Enter user name:\n");
+                System.out.println("Enter user name:");
                 userName = br.readLine();
 
                 if (!h.checkCorrectUserName(userName)){
@@ -129,10 +129,10 @@ public class Client {
             }while(!h.checkCorrectUserName(userName));
 
             do {
-                System.out.println("Enter the password:\n");
+                System.out.println("Enter the password:");
                 password = br.readLine();
 
-                System.out.println("Confirm the password:\n");
+                System.out.println("Confirm the password:");
                 confirmation = br.readLine();
 
                 if (!password.equals(confirmation))
@@ -186,9 +186,10 @@ public class Client {
             if(correctUser){
                 callbackObj = new ClientImpl();
                 // register for callback
-                h.registerForCallback(callbackObj, userName);
+                h.registerForCallback(callbackObj);
                 System.out.println("User connected and registered for a callback.");
 
+                currentUserName = userName;
                 while(!isFinished){
                     checkCorrectOption(h);
                 }
@@ -291,7 +292,8 @@ public class Client {
                     }
 
                     //Upload the file to the server
-                    System.out.println(h.upload(fileBytes, fileDest, fileTitleUp, fileTagUp));
+                    int idUser = h.getIdFromUser(currentUserName);
+                    System.out.println(h.upload(fileBytes, fileDest, fileTitleUp, fileTagUp, idUser));
                     isCorrectFile = true;
                 }
 
@@ -386,17 +388,21 @@ public class Client {
                 }
                 else{
                     isCorrectTitle = true;
-                    if(h.getFilesWithTitles(fileTitle).size() == 1) {
+                    /*if(h.getFilesWithTitles(fileTitle).size() == 1) {
                         System.out.println(h.downloadFile((JSONObject) h.getFilesWithTitles(fileTitle).get(0)));
-                    } else {
-                        ArrayList<String> arrayString = h.selectFile(h.getFilesWithTitles(fileTitle));
-                        for(String str: arrayString) {
+                    } else {*/
+                        ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
+                        System.out.println("Return to menu[R]");
+                        for(String str: listWithTitles) {
                             System.out.println(str);
                         }
                         String idFile = br.readLine();
+                        if (idFile.equals("R")){
+                            checkCorrectOption(h);
+                        }
                         String fileName = h.getFileName(idFile);
                         System.out.println(h.downloadFileString(fileName));
-                    }
+                    //}
                 }
 
             } catch (IOException e) {
@@ -422,11 +428,15 @@ public class Client {
                     System.out.println("Select the title to search");
 
                     ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileDescription));
+                    System.out.println("Return to menu[R]");
                     for(String title: selectTitleArray) {
                         System.out.println(title);
                     }
                     String idFile = br.readLine();
 
+                    if(idFile.equals("R")) {
+                        checkCorrectOption(h);
+                    }
                     ArrayList<String> infoTitle = h.showFileInfo(h.getFilesList(), idFile);
                     for(String info: infoTitle) {
                         System.out.println(info);
@@ -444,7 +454,7 @@ public class Client {
     private static void deleteOption(CallbackServerInterface h) {
         boolean isCorrectTitle = false;
         while (!isCorrectTitle) {
-            System.out.println("Enter the title to delete");
+            System.out.println("Enter the title to remove");
             try{
                 String fileTitle = br.readLine();
 
@@ -453,17 +463,22 @@ public class Client {
                 }
                 else{
                     isCorrectTitle = true;
-                    System.out.println("Select the title to delete");
+                    System.out.println("Select the title to remove");
 
                     ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    System.out.println("Return to menu[R]");
                     for(String title: selectTitleArray) {
                         System.out.println(title);
                     }
                     String idFile = br.readLine();
+                    if(idFile.equals("R")) {
+                        checkCorrectOption(h);
+                    }
 
                     String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile);
 
                     System.out.println(deleteInfo);
+
 
                 }
 

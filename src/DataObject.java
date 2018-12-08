@@ -10,7 +10,7 @@ public class DataObject {
     private String tag;
     private String fileName;
     private int id;
-    private static int nextId = 0;
+    private int idUser;
 
 
     static JSONObject jsonObject;
@@ -21,15 +21,26 @@ public class DataObject {
         jsonObject = null;
         this.id = 0;
         this.fileName = null;
+        this.idUser = 0;
     }
 
-    public  DataObject(String name, String tag, String fileName) {
+    public  DataObject(String name, String tag, String fileName, int idUser, int idFile) {
         this.name = name;
         this.tag = tag;
         jsonObject = new JSONObject();
-        id = nextId;
-        nextId++;
+        id = idFile;
         this.fileName = fileName;
+        this.idUser = idUser;
+    }
+
+
+
+    public int getIdUser() {
+        return idUser;
+    }
+
+    public void setIdUser(int idUser) {
+        this.idUser = idUser;
     }
 
     public String getName() {
@@ -65,6 +76,7 @@ public class DataObject {
         jsonObject.put("tag", this.tag);
         jsonObject.put("id", this.id);
         jsonObject.put("fileName", this.fileName);
+        jsonObject.put("idUser", this.idUser);
         return jsonObject;
     }
 
