@@ -59,7 +59,7 @@ public class ServerImpl extends UnicastRemoteObject
         } // end if
     }
 
-    private Integer getIdFromUser(String userName) {
+    public int getIdFromUser(String userName) {
         try {
             ArrayUsers arrayUsers = new ArrayUsers();
             ObjectMapper objectMapper = new ObjectMapper();

@@ -59,4 +59,6 @@ public interface CallbackServerInterface extends Remote {
     public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException;
 
     public int getLastIdFromUsers() throws RemoteException;
+
+    public int getIdFromUser(String userName) throws RemoteException;
 }

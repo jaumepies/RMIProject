@@ -5,7 +5,7 @@ TODO list:
         ->Delete
         ->Revisar Download
     -USERS:
-        ->Guardar ultim ID
+        X->Guardar ultim ID
         ->Eliminar subscripcio
         ->Afegir subscripcio
     -CALLBACKS:
