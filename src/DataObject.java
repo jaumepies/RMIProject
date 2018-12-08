@@ -3,11 +3,12 @@
 
 import org.json.simple.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class DataObject {
     private String name;
-    private String tag;
+    private ArrayList<String> topicList;
     private String fileName;
     private int id;
     private int idUser;
@@ -17,16 +18,16 @@ public class DataObject {
 
     public  DataObject() {
         this.name = null;
-        this.tag = null;
+        this.topicList = null;
         jsonObject = null;
         this.id = 0;
         this.fileName = null;
         this.idUser = 0;
     }
 
-    public  DataObject(String name, String tag, String fileName, int idUser, int idFile) {
+    public  DataObject(String name, ArrayList<String> tl, String fileName, int idUser, int idFile) {
         this.name = name;
-        this.tag = tag;
+        this.topicList = tl;
         jsonObject = new JSONObject();
         id = idFile;
         this.fileName = fileName;
@@ -51,12 +52,12 @@ public class DataObject {
         this.name = name;
     }
 
-    public String getTag() {
-        return tag;
+    public ArrayList<String> getTopicList() {
+        return topicList;
     }
 
-    public void setTag(String description) {
-        this.tag = description;
+    public void setTopicList(ArrayList<String> topicList) {
+        this.topicList = topicList;
     }
 
     public int getId() {
@@ -73,7 +74,7 @@ public class DataObject {
 
     public JSONObject createJSONObject(){
         jsonObject.put("name", this.name);
-        jsonObject.put("tag", this.tag);
+        jsonObject.put("topicList", this.topicList);
         jsonObject.put("id", this.id);
         jsonObject.put("fileName", this.fileName);
         jsonObject.put("idUser", this.idUser);
@@ -86,8 +87,11 @@ public class DataObject {
         if (this == o) return true;
         if (!(o instanceof DataObject)) return false;
         DataObject that = (DataObject) o;
-        return Objects.equals(getName(), that.getName()) &&
-                Objects.equals(getTag(), that.getTag());
+        return getId() == that.getId() &&
+                getIdUser() == that.getIdUser() &&
+                Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getTopicList(), that.getTopicList()) &&
+                Objects.equals(getFileName(), that.getFileName());
     }
 
 }

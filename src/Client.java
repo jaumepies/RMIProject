@@ -5,6 +5,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.UnknownServiceException;
 import java.rmi.*;
 import java.util.ArrayList;
@@ -186,7 +187,7 @@ public class Client {
             if(correctUser){
                 callbackObj = new ClientImpl();
                 // register for callback
-                h.registerForCallback(callbackObj);
+                h.registerForCallback(callbackObj, userName);
                 System.out.println("User connected and registered for a callback.");
 
                 currentUserName = userName;
@@ -250,7 +251,7 @@ public class Client {
 
             case "E": //Exit
                 try {
-                    h.unregisterForCallback(callbackObj);
+                    h.unregisterForCallback(callbackObj, currentUserName);
                     isFinished = true;
                 } catch (RemoteException e) {
                     e.printStackTrace();
@@ -285,7 +286,7 @@ public class Client {
                         fileDest = new File("./Server/"+copyName);
                     }
                     String fileTitleUp = getTitle();
-                    String fileTagUp = getTag();
+                    ArrayList<String> fileTopicListUp = getTopicList();
 
                     if(copyName != fileNameUp) {
                         System.out.println("The file already exists and it has been modified to "+ copyName);
@@ -293,7 +294,7 @@ public class Client {
 
                     //Upload the file to the server
                     int idUser = h.getIdFromUser(currentUserName);
-                    System.out.println(h.upload(fileBytes, fileDest, fileTitleUp, fileTagUp, idUser));
+                    System.out.println(h.upload(fileBytes, fileDest, fileTitleUp, fileTopicListUp, idUser));
                     isCorrectFile = true;
                 }
 
@@ -316,15 +317,20 @@ public class Client {
         return title;
     }
 
-    private static String getTag() {
-        String tag = "";
+    private static ArrayList<String> getTopicList() {
+        ArrayList<String> topicList = new ArrayList<>();
+        String strTopics;
         try{
-            System.out.println("Enter the tag of file:");
-            tag = br.readLine();
+            System.out.println("Enter the topic of the file:");
+            strTopics = br.readLine();
+            String[] topicSplited = strTopics.split(",");
+            for (String elem: topicSplited) {
+                topicList.add(elem.trim());
+            }
         }catch(IOException e){
 
         }
-        return tag;
+        return topicList;
     }
 
     private static byte[] fileToBytes(File file) {

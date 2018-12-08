@@ -1,5 +1,7 @@
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.org.apache.regexp.internal.RE;
 import org.json.simple.JSONArray;
@@ -14,8 +16,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import static java.lang.Math.toIntExact;
 
-public class ServerImpl extends UnicastRemoteObject
-        implements CallbackServerInterface {
+public class ServerImpl extends UnicastRemoteObject implements CallbackServerInterface {
 
     static FileReader fileReader;
     static JSONArray arrayJSON;
@@ -63,41 +64,26 @@ public class ServerImpl extends UnicastRemoteObject
         }*/ // end if
     }
 
-    public int getIdFromUser(String userName) {
-        try {
-            ArrayUsers arrayUsers = new ArrayUsers();
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-
-            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
-
-            for (User user: arrayUsers.usersArrayList) {
-                if(user.getUserName().equals(userName)){
-                    return user.getUserId();
-                }
-            }
-            return -1;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return -1;
-        }
-    }
-
     // This remote method allows an object client to
 // cancel its registration for callback
 // @param id is an ID for the client; to be used by
 // the server to uniquely identify the registered client.
-    public synchronized void unregisterForCallback(
-            CallbackClientInterface callbackClientObject)
+    public synchronized void unregisterForCallback(CallbackClientInterface callbackClientObject, String userName)
             throws java.rmi.RemoteException{
-        if (clientList.removeElement(callbackClientObject)) {
+        Integer idUser = getIdFromUser(userName);
+        if (clientHash.remove(idUser, callbackClientObject)) {
+            System.out.println("Client "+ userName +" logged out");
+        }
+        else {
+            System.out.println(
+                    "client wasn't logged.");
+        }
+        /*if (clientList.removeElement(callbackClientObject)) {
             System.out.println("Unregistered client ");
         } else {
             System.out.println(
                     "unregister: client wasn't registered.");
-        }
+        }*/
     }
 
     private synchronized void doCallbacks( ) throws java.rmi.RemoteException{
@@ -178,14 +164,14 @@ public class ServerImpl extends UnicastRemoteObject
     }
 
     @Override
-    public String upload(byte[] bytes, File fileDest, String name, String tag, int idUser) {
+    public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser) {
 
         try {
             FileOutputStream fileOuputStream = new FileOutputStream(fileDest);
             int idFile = getLastIdFromFile();
             updateLastIdFile(idFile);
 
-            DataObject fileInfo = new DataObject(name, tag, fileDest.getName(), idUser, idFile);
+            DataObject fileInfo = new DataObject(name, topicList, fileDest.getName(), idUser, idFile);
             fileOuputStream.write(bytes);
             fileOuputStream.close();
 
@@ -199,6 +185,9 @@ public class ServerImpl extends UnicastRemoteObject
             arrayDataObject.addDataObject(fileInfo);
 
             objectMapper.writeValue(new File(FILE_INFO), arrayDataObject);
+
+            //Callbacks
+            doSubcriptionCallbacks(topicList);
 
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");
             return "File: " + fileDest.getName() + " uploaded correctly.";
@@ -237,7 +226,7 @@ public class ServerImpl extends UnicastRemoteObject
             JSONObject file = (JSONObject) f;
             if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
                     file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("tag")).find() ||
+                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("topicList")).find() ||
                     Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
                             file.get("name")).find()){
                 //System.out.println("Found title");
@@ -485,7 +474,7 @@ public class ServerImpl extends UnicastRemoteObject
         }
         ArrayList<String> fileInfo = new ArrayList<>();
         fileInfo.add("The title is: " + searchedFile.get("name"));
-        fileInfo.add("The topic description is: " + searchedFile.get("tag"));
+        fileInfo.add("The topic description is: " + searchedFile.get("topicList"));
         fileInfo.add("The file name is: " + searchedFile.get("fileName"));
 
         return fileInfo;
@@ -536,5 +525,67 @@ public class ServerImpl extends UnicastRemoteObject
                 fileName = (String) infoFile.get("fileName");
         }
         return fileName;
+    }
+
+    public int getIdFromUser(String userName) {
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            for (User user: arrayUsers.usersArrayList) {
+                if(user.getUserName().equals(userName)){
+                    return user.getUserId();
+                }
+            }
+            return -1;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+
+
+    public void doSubcriptionCallbacks(ArrayList<String> topicList) throws RemoteException{
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            for (User user: arrayUsers.usersArrayList) {
+                String[] matches = getTopicMatches(user.getSubscriptionList(), topicList);
+                if (matches.length > 0){
+                    CallbackClientInterface callbackClient = clientHash.get(user.getUserId());
+                    callbackClient.notifyMe("A file with "+ matches + " topics has been uploaded");
+                }
+            }
+
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (JsonParseException e) {
+            e.printStackTrace();
+        } catch (JsonMappingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String[] getTopicMatches(ArrayList<String> subsList, ArrayList<String> topicList) {
+        String[] matches = {};
+        for (int i = 0; i<subsList.size();i++) {
+            if(topicList.contains(subsList.get(i))){
+                matches[i] = subsList.get(i);
+            }
+        }
+        return matches;
     }
 }// end ServerImpl class
