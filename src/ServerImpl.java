@@ -60,27 +60,9 @@ public class ServerImpl extends UnicastRemoteObject
         } // end if
     }
 
-    public int getIdFromUser(String userName) {
-        try {
-            ArrayUsers arrayUsers = new ArrayUsers();
-            ObjectMapper objectMapper = new ObjectMapper();
 
-            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
-            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
 
-            for (User user: arrayUsers.usersArrayList) {
-                if(user.getUserName().equals(userName)){
-                    return user.getUserId();
-                }
-            }
-            return -1;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return -1;
-        }
-    }
 
     // This remote method allows an object client to
 // cancel its registration for callback
@@ -273,7 +255,7 @@ public class ServerImpl extends UnicastRemoteObject
         byte[] downfileBytes = download(fileNameDwn);
 
         if(downfileBytes == null) {
-            System.out.println("The file does not exist");
+            System.out.println("The file does not exists");
         } else {
             FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
 
@@ -482,9 +464,11 @@ public class ServerImpl extends UnicastRemoteObject
     }
 
     @Override
-    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException {
+    public String deleteFileInfo(JSONArray filesList, String idFile, String currentUser) throws IOException {
 
         String titleToDelete = "";
+        String fileNameToDelete = "";
+        String stringToReturn = "";
 
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
@@ -492,10 +476,24 @@ public class ServerImpl extends UnicastRemoteObject
 
         for (DataObject dataObject : arrayListDataObject) {
             if(String.valueOf(dataObject.getId()).equals(idFile)) {
-                titleToDelete = dataObject.getName();
-                arrayListDataObject.remove(dataObject);
-                break;
+                if(dataObject.getIdUser() == getIdFromUser(currentUser)) {
+                    titleToDelete = dataObject.getName();
+                    fileNameToDelete = dataObject.getFileName();
+                    arrayListDataObject.remove(dataObject);
 
+                    File file = new File("./receivedData/" + fileNameToDelete);
+
+                    if (file.delete()) {
+                        stringToReturn = "The file " + fileNameToDelete + " with title " + titleToDelete + " has been deleted";
+                    } else {
+                        stringToReturn = titleToDelete + "does not exists";
+                    }
+
+                    break;
+                } else {
+                    stringToReturn = "You don't uploaded this file";
+                    break;
+                }
             }
         }
         arrayDataObj.setArrayDataObject(arrayListDataObject);
@@ -506,8 +504,16 @@ public class ServerImpl extends UnicastRemoteObject
         } catch (IOException e) {
             e.printStackTrace();
         }
+        deleteFileFromServer(fileNameToDelete);
 
-        return "The title " + titleToDelete + "has been deleted";
+        return stringToReturn;
+    }
+
+    private void deleteFileFromServer(String fileNameToDelete) {
+        File file = new File("./receivedData/" + fileNameToDelete);
+        if(file.delete()){
+            System.out.println(fileNameToDelete + " deleted");
+        }else System.out.println("File does not exists");
     }
 
     public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException {
@@ -526,5 +532,49 @@ public class ServerImpl extends UnicastRemoteObject
                 fileName = (String) infoFile.get("fileName");
         }
         return fileName;
+    }
+
+    public int getIdFromUser(String userName) {
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            for (User user: arrayUsers.usersArrayList) {
+                if(user.getUserName().equals(userName)){
+                    return user.getUserId();
+                }
+            }
+            return -1;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public String getUserFromId(int idUser) {
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            for (User user: arrayUsers.usersArrayList) {
+                if(user.getUserId() == idUser){
+                    return user.getUserName();
+                }
+            }
+            return "";
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 }// end ServerImpl class

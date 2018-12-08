@@ -210,7 +210,7 @@ public class Client {
         while(!correctOption){
 
             System.out.println("\nChoose your option:");
-            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Exit[E]");
+            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Log Out[L]");
 
             String option = "";
             try {
@@ -248,7 +248,7 @@ public class Client {
                 return true;
 
 
-            case "E": //Exit
+            case "L": //Log Out
                 try {
                     h.unregisterForCallback(callbackObj);
                     isFinished = true;
@@ -273,7 +273,7 @@ public class Client {
                 File file = getFile(fileNameUp);
 
                 if(file == null) {
-                    System.out.println("The file does not exist");
+                    System.out.println("The file does not exists");
                 } else {
                     //Create a byte array to send
                     byte[] fileBytes = fileToBytes(file);
@@ -474,10 +474,18 @@ public class Client {
                     if(idFile.equals("R")) {
                         checkCorrectOption(h);
                     }
+                    System.out.println("Are you sure? \n Yes[Y] / No[N]");
+                    String sure = br.readLine();
+                    if(sure.equals("Y")) {
+                        String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile, currentUserName);
 
-                    String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile);
+                        System.out.println(deleteInfo);
+                    }
+                    else{
+                        deleteOption(h);
+                    }
 
-                    System.out.println(deleteInfo);
+
 
 
                 }

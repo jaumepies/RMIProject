@@ -53,11 +53,14 @@ public interface CallbackServerInterface extends Remote {
     public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException;
     public JSONArray getFilesList() throws ParseException, IOException;
 
-    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException;
+    public String deleteFileInfo(JSONArray filesList, String idFile, String currentUser) throws IOException;
 
     public String getFileName(String idFile) throws IOException, ParseException;
     public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException;
 
     public int getLastIdFromUsers() throws RemoteException;
     public int getIdFromUser(String userName) throws RemoteException;
+    public String getUserFromId(int idUser) throws RemoteException;
+
+
 }
