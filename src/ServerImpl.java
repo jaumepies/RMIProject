@@ -562,9 +562,9 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
             for (User user: arrayUsers.usersArrayList) {
                 ArrayList<String> matches = getTopicMatches(user.getSubscriptionList(), topicList);
-                if (matches != null){
+                if (matches.size() != 0 ){
                     CallbackClientInterface callbackClient = clientHash.get(user.getUserId());
-                    callbackClient.notifyMe("A file with "+ matches.toString() + " topics has been uploaded");
+                    callbackClient.notifyMe("A file with "+ matches.toString().replace("[","").replace("]","") + " topic/s has been uploaded");
                 }
             }
 
