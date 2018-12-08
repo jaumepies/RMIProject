@@ -561,10 +561,10 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
 
             for (User user: arrayUsers.usersArrayList) {
-                String[] matches = getTopicMatches(user.getSubscriptionList(), topicList);
-                if (matches.length > 0){
+                ArrayList<String> matches = getTopicMatches(user.getSubscriptionList(), topicList);
+                if (matches != null){
                     CallbackClientInterface callbackClient = clientHash.get(user.getUserId());
-                    callbackClient.notifyMe("A file with "+ matches + " topics has been uploaded");
+                    callbackClient.notifyMe("A file with "+ matches.toString() + " topics has been uploaded");
                 }
             }
 
@@ -579,11 +579,12 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }
     }
 
-    private String[] getTopicMatches(ArrayList<String> subsList, ArrayList<String> topicList) {
-        String[] matches = {};
-        for (int i = 0; i<subsList.size();i++) {
-            if(topicList.contains(subsList.get(i))){
-                matches[i] = subsList.get(i);
+    private ArrayList<String> getTopicMatches(ArrayList<String> subsList, ArrayList<String> topicList) {
+        ArrayList<String> matches = new ArrayList<>();
+
+        for (String sub: subsList) {
+            if(topicList.contains(sub)){
+                matches.add(sub);
             }
         }
         return matches;
