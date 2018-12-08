@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.regex.Pattern;
-
+import static  java.lang.Math.toIntExact;
 
 public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
@@ -26,6 +26,7 @@ public class ServerImpl extends UnicastRemoteObject
     static final String COPY_FILE = "./fileInfo2.json";
 
     static final String FILE_USERS = "users.json";
+    static final String FILE_LASTIDUSER= "lastiduser.json";
 
 
 
@@ -43,8 +44,7 @@ public class ServerImpl extends UnicastRemoteObject
 
     }
 
-    public String sayHello( )
-            throws java.rmi.RemoteException {
+    public String sayHello( ) throws java.rmi.RemoteException {
         return("hello");
     }
 
@@ -330,6 +330,10 @@ public class ServerImpl extends UnicastRemoteObject
 
             objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
 
+
+            //Store the last id.
+            updateLastIdUser(newUser.getUserId());
+
             System.out.printf("User: "+ newUser.getUserName() + " was registered correctly.");
             return "User: "+ newUser.getUserName() + " was registered correctly.";
         } catch (RemoteException e1){
@@ -339,6 +343,51 @@ public class ServerImpl extends UnicastRemoteObject
             e.printStackTrace();
             return "Error, registering the new user!!!";
         }
+    }
+
+    private void updateLastIdUser(int newId) {
+        JSONParser jsonParser = new JSONParser();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try
+        {
+            Object obj = jsonParser.parse(new FileReader(FILE_LASTIDUSER));
+
+            JSONObject jsonObject = (JSONObject) obj;
+
+            int lastId = toIntExact((Long) jsonObject.get("lastIdUser"));
+            if (lastId != newId){
+                jsonObject.put("lastIdUser", newId);
+
+                objectMapper.writeValue(new File(FILE_LASTIDUSER), jsonObject);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public int getLastIdFromUsers() throws RemoteException{
+        JSONParser jsonParser = new JSONParser();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try
+        {
+            Object obj = jsonParser.parse(new FileReader(FILE_LASTIDUSER));
+
+            JSONObject jsonObject = (JSONObject) obj;
+
+            if(jsonObject.size()== 0){
+                jsonObject.put("lastIdUser", 0);
+
+                objectMapper.writeValue(new File(FILE_LASTIDUSER), jsonObject);
+                return 0;
+            }
+            else
+                return  toIntExact((Long) jsonObject.get("lastIdUser"));
+
+        }catch(Exception e){
+            e.printStackTrace();
+            return -1;
+        }
+
     }
 
     @Override
