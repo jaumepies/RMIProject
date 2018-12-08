@@ -10,9 +10,7 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Vector;
+import java.util.*;
 import java.util.regex.Pattern;
 import static  java.lang.Math.toIntExact;
 
@@ -52,11 +50,16 @@ public class ServerImpl extends UnicastRemoteObject
         // store the callback object into the vector
         //carrega id del usuari
         Integer idUser = getIdFromUser(userName);
-        if (!(clientList.contains(callbackClientObject))) {
+        if(!clientHash.containsKey(idUser)){
+            clientHash.put(idUser, callbackClientObject);
+            System.out.println("New client logged ");
+            doCallbacks();
+        }
+        /*if (!(clientList.contains(callbackClientObject))) {
             clientList.addElement(callbackClientObject);
             System.out.println("Registered new client ");
             doCallbacks();
-        } // end if
+        }*/ // end if
     }
 
     public int getIdFromUser(String userName) {
@@ -92,30 +95,37 @@ public class ServerImpl extends UnicastRemoteObject
             System.out.println("Unregistered client ");
         } else {
             System.out.println(
-                    "unregister: clientwasn't registered.");
+                    "unregister: client wasn't registered.");
         }
     }
 
     private synchronized void doCallbacks( ) throws java.rmi.RemoteException{
-        // make callback to each registered client
-        System.out.println(
-                "**************************************\n"
-                        + "Callbacks initiated ---");
-        for (int i = 0; i < clientList.size(); i++){
+        // make callback to each logged client
+        int index = 0;
+        System.out.println("**************************************\n" + "Callbacks initiated ---");
+        Set set = clientHash.entrySet();
+        Iterator iter = set.iterator();
+        while(iter.hasNext()){
+            System.out.println("doing "+ index +"-th callback\n");
+            Map.Entry mentry = (Map.Entry)iter.next();
+            CallbackClientInterface nextClient = (CallbackClientInterface)mentry.getValue();
+            nextClient.notifyMe("Number of logged clients=" +  clientHash.size());
+            index++;
+        }
+        System.out.println("********************************\n" + "Server completed callbacks ---");
+        /*for (int i = 0; i < clientList.size(); i++){
             System.out.println("doing "+ i +"-th callback\n");
             // convert the vector object to a callback object
             CallbackClientInterface nextClient = (CallbackClientInterface)clientList.elementAt(i);
             // invoke the callback method
-            nextClient.notifyMe("Number of registered clients="
-                    +  clientList.size());
-        }// end for
-        System.out.println("********************************\n" +
-                "Server completed callbacks ---");
+            nextClient.notifyMe("Number of registered clients=" +  clientList.size());
+        }*/// end for
+
     } // doCallbacks
 
     public File getFileToDownload(String fileName){
 
-        File file = new File("./receivedData/"+fileName);
+        File file = new File("./Server/"+fileName);
         if(!file.exists()) {
             return null;
         }
@@ -256,11 +266,11 @@ public class ServerImpl extends UnicastRemoteObject
     public String downloadFileString(String fileNameDwn) throws IOException {
         String copyName = fileNameDwn;
 
-        File fileDestDwn = new File("./sharedData/"+fileNameDwn);
+        File fileDestDwn = new File("./Client/"+fileNameDwn);
 
         while(fileDestDwn.exists()) {
             copyName += "1";
-            fileDestDwn = new File("./sharedData/"+copyName);
+            fileDestDwn = new File("./Client/"+copyName);
         }
         if(copyName != fileNameDwn) {
             System.out.println("The file already exists and it has been modified to "+ copyName);

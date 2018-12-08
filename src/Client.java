@@ -277,11 +277,11 @@ public class Client {
                     //Create a byte array to send
                     byte[] fileBytes = fileToBytes(file);
                     //Get the Destination path
-                    File fileDest = new File("./receivedData/"+fileNameUp);
+                    File fileDest = new File("./Server/"+fileNameUp);
                     String copyName = fileNameUp;
                     while(fileDest.exists()) {
                         copyName += "1";
-                        fileDest = new File("./receivedData/"+copyName);
+                        fileDest = new File("./Server/"+copyName);
                     }
                     String fileTitleUp = getTitle();
                     String fileTagUp = getTag();
@@ -366,7 +366,7 @@ public class Client {
     }
 
     private static File getFile(String fileNameUp) {
-        File file = new File("./sharedData/"+fileNameUp);
+        File file = new File("./Client/"+fileNameUp);
         if(file.exists()) {
             return  file;
         }
