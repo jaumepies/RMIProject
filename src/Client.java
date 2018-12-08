@@ -385,17 +385,21 @@ public class Client {
                 }
                 else{
                     isCorrectTitle = true;
-                    if(h.getFilesWithTitles(fileTitle).size() == 1) {
+                    /*if(h.getFilesWithTitles(fileTitle).size() == 1) {
                         System.out.println(h.downloadFile((JSONObject) h.getFilesWithTitles(fileTitle).get(0)));
-                    } else {
-                        ArrayList<String> arrayString = h.selectFile(h.getFilesWithTitles(fileTitle));
-                        for(String str: arrayString) {
+                    } else {*/
+                        ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
+                        System.out.println("Return to menu[R]");
+                        for(String str: listWithTitles) {
                             System.out.println(str);
                         }
                         String idFile = br.readLine();
+                        if (idFile.equals("R")){
+                            checkCorrectOption(h);
+                        }
                         String fileName = h.getFileName(idFile);
                         System.out.println(h.downloadFileString(fileName));
-                    }
+                    //}
                 }
 
             } catch (IOException e) {
@@ -421,11 +425,15 @@ public class Client {
                     System.out.println("Select the title to search");
 
                     ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileDescription));
+                    System.out.println("Return to menu[R]");
                     for(String title: selectTitleArray) {
                         System.out.println(title);
                     }
                     String idFile = br.readLine();
 
+                    if(idFile.equals("R")) {
+                        checkCorrectOption(h);
+                    }
                     ArrayList<String> infoTitle = h.showFileInfo(h.getFilesList(), idFile);
                     for(String info: infoTitle) {
                         System.out.println(info);
@@ -443,7 +451,7 @@ public class Client {
     private static void deleteOption(CallbackServerInterface h) {
         boolean isCorrectTitle = false;
         while (!isCorrectTitle) {
-            System.out.println("Enter the title to delete");
+            System.out.println("Enter the title to remove");
             try{
                 String fileTitle = br.readLine();
 
@@ -452,17 +460,22 @@ public class Client {
                 }
                 else{
                     isCorrectTitle = true;
-                    System.out.println("Select the title to delete");
+                    System.out.println("Select the title to remove");
 
                     ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    System.out.println("Return to menu[R]");
                     for(String title: selectTitleArray) {
                         System.out.println(title);
                     }
                     String idFile = br.readLine();
+                    if(idFile.equals("R")) {
+                        checkCorrectOption(h);
+                    }
 
                     String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile);
 
                     System.out.println(deleteInfo);
+
 
                 }
 

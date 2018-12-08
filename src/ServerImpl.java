@@ -48,10 +48,10 @@ public class ServerImpl extends UnicastRemoteObject
         return("hello");
     }
 
-    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject, String userName) throws java.rmi.RemoteException{
+    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject) throws java.rmi.RemoteException{
         // store the callback object into the vector
         //carrega id del usuari
-        Integer idUser = getIdFromUser(userName);
+        //Integer idUser = getIdFromUser(userName);
         if (!(clientList.contains(callbackClientObject))) {
             clientList.addElement(callbackClientObject);
             System.out.println("Registered new client ");
@@ -385,19 +385,24 @@ public class ServerImpl extends UnicastRemoteObject
     public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException {
 
         String titleToDelete = "";
+
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
         ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
+
         for (DataObject dataObject : arrayListDataObject) {
             if(String.valueOf(dataObject.getId()).equals(idFile)) {
-                arrayListDataObject.remove(dataObject);
                 titleToDelete = dataObject.getName();
+                arrayListDataObject.remove(dataObject);
+                break;
+
             }
         }
+        arrayDataObj.setArrayDataObject(arrayListDataObject);
 
-        objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         try {
-            objectMapper.writeValue(new File(FILE_INFO), arrayListDataObject);
+            objectMapper.writeValue(new File(FILE_INFO), arrayDataObj);
         } catch (IOException e) {
             e.printStackTrace();
         }

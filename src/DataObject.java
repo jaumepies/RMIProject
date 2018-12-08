@@ -10,6 +10,7 @@ public class DataObject {
     private String tag;
     private String fileName;
     private int id;
+    private int userId;
     private static int nextId = 0;
 
 
