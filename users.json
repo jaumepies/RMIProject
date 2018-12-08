@@ -1,1 +1,1 @@
-{"usersArrayList":[{"userName":"ric","password":"123","userId":1,"subscriptionList":[]},{"userName":"ricard","password":"123","userId":2,"subscriptionList":[]},{"userName":"jaume","password":"123","userId":3,"subscriptionList":[]}]}
+{"usersArrayList":[{"userName":"jaume","password":"123","userId":1,"subscriptionList":["animal","foto","dog"]},{"userName":"ricard","password":"123","userId":2,"subscriptionList":["animal","pokemon","video"]},{"userName":"pepito","password":"123","userId":3,"subscriptionList":["foto","pokemon"]}]}
