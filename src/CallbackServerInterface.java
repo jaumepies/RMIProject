@@ -56,6 +56,7 @@ public interface CallbackServerInterface extends Remote {
     public String deleteFileInfo(JSONArray filesList, String idFile, String currentUser) throws IOException;
 
     public String getFileName(String idFile) throws IOException, ParseException;
+    public String getName(String idFile) throws IOException, ParseException;
     public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException;
 
     public int getLastIdFromUsers() throws RemoteException;

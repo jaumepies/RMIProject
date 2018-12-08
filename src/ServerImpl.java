@@ -534,6 +534,18 @@ public class ServerImpl extends UnicastRemoteObject
         return fileName;
     }
 
+    @Override
+    public String getName(String idFile) throws IOException, ParseException {
+        JSONArray jsonArray = getFilesList();
+        String name = "";
+        for(Object object: jsonArray) {
+            JSONObject infoFile = (JSONObject) object;
+            if(String.valueOf(infoFile.get("id")).equals(idFile))
+                name = (String) infoFile.get("name");
+        }
+        return name;
+    }
+
     public int getIdFromUser(String userName) {
         try {
             ArrayUsers arrayUsers = new ArrayUsers();
@@ -580,74 +592,42 @@ public class ServerImpl extends UnicastRemoteObject
 
     @Override
     public String changeFileTitle(String oldTitle, String newTitle, String currentUser) {
-        JSONParser jsonParser = new JSONParser();
-        ObjectMapper objectMapper = new ObjectMapper();
+
+
         String stringToReturn = "";
-        try
-        {
-            JSONArray filesList = getFilesList();
-            for (Object o : filesList) {
-                JSONObject file = (JSONObject) o;
-                if (String.valueOf(file.get("name")).equals(oldTitle)){
 
-                    if(currentUser.equals(getUserFromId(toIntExact((Long)file.get("idUser"))))){
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
+            ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
 
+            for (DataObject dataObject : arrayListDataObject) {
+                if(String.valueOf(dataObject.getName()).equals(oldTitle)) {
+                    if(dataObject.getIdUser() == getIdFromUser(currentUser)) {
+                        dataObject.setName(newTitle);
                         stringToReturn = "The title " + newTitle + " has been modified";
-
+                        break;
                     } else {
-                        stringToReturn = "You don't uploaded this file" ;
+                        stringToReturn = "You don't uploaded this file";
+                        break;
                     }
                 }
             }
+            arrayDataObj.setArrayDataObject(arrayListDataObject);
 
-
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
-
-        return stringToReturn;
-
-
-        /*
-        ObjectMapper objectMapper = new ObjectMapper();
-        ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
-        ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
-
-        for (DataObject dataObject : arrayListDataObject) {
-            if(String.valueOf(dataObject.getId()).equals(idFile)) {
-                if(dataObject.getIdUser() == getIdFromUser(currentUser)) {
-                    titleToDelete = dataObject.getName();
-                    fileNameToDelete = dataObject.getFileName();
-                    arrayListDataObject.remove(dataObject);
-
-                    File file = new File("./receivedData/" + fileNameToDelete);
-
-                    if (file.delete()) {
-                        stringToReturn = "The file " + fileNameToDelete + " with title " + titleToDelete + " has been deleted";
-                    } else {
-                        stringToReturn = titleToDelete + "does not exists";
-                    }
-
-                    break;
-                } else {
-                    stringToReturn = "You don't uploaded this file";
-                    break;
-                }
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            try {
+                objectMapper.writeValue(new File(FILE_INFO), arrayDataObj);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }
-        arrayDataObj.setArrayDataObject(arrayListDataObject);
 
-        //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        try {
-            objectMapper.writeValue(new File(FILE_INFO), arrayDataObj);
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        deleteFileFromServer(fileNameToDelete);
-
         return stringToReturn;
 
-         */
     }
 }// end ServerImpl class

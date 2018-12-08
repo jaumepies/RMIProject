@@ -558,7 +558,7 @@ public class Client {
                         System.out.println("Enter the new title");
                          newTitle = br.readLine();
                     }
-                    String oldTitle = h.getFileName(idFile);
+                    String oldTitle = h.getName(idFile);
                     System.out.println(h.changeFileTitle(oldTitle, newTitle, currentUserName));
                 }
 
@@ -571,6 +571,41 @@ public class Client {
     }
 
     private static void changeDescription(CallbackServerInterface h) {
+        boolean isCorrectTitle = false;
+        while (!isCorrectTitle) {
+            System.out.println("Enter the title to modify");
+            try{
+                String fileTitle = br.readLine();
+
+                if(h.getFilesWithTitles(fileTitle).size() == 0) {
+                    System.out.println("Title not found");
+                }
+                else{
+                    isCorrectTitle = true;
+
+                    String newTitle ="";
+                    ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    System.out.println("Return to menu[R]");
+                    for(String str: listWithTitles) {
+                        System.out.println(str);
+                    }
+                    String idFile = br.readLine();
+                    if (idFile.equals("R")){
+                        checkCorrectOption(h);
+                    } else{
+                        System.out.println("Enter the new title");
+                        newTitle = br.readLine();
+                    }
+                    String oldTitle = h.getName(idFile);
+                    System.out.println(h.changeFileTitle(oldTitle, newTitle, currentUserName));
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static void manageSubscriptionOption(CallbackServerInterface h) {
