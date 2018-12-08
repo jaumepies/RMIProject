@@ -9,6 +9,8 @@ import java.lang.reflect.Array;
 import java.net.UnknownServiceException;
 import java.rmi.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 
@@ -514,17 +516,17 @@ public class Client {
                 switch (option){
                     case "R":
                         checkCorrectOption(h);
-                        //isCorrectOption = true;
+                        isCorrectOption = true;
                         break;
 
                     case "T":
                         changeTitle(h);
-                        //isCorrectOption = true;
+                        isCorrectOption = true;
                         break;
 
                     case "D":
                         changeDescription(h);
-                        //isCorrectOption = true;
+                        isCorrectOption = true;
                         break;
 
                     default:
@@ -577,20 +579,22 @@ public class Client {
     }
 
     private static void changeDescription(CallbackServerInterface h) {
-        boolean isCorrectTitle = false;
-        while (!isCorrectTitle) {
-            System.out.println("Enter the title to modify");
+        boolean isCorrectDescription = false;
+        while (!isCorrectDescription) {
+            System.out.println("Enter the topic description to modify");
             try{
-                String fileTitle = br.readLine();
+                String fileDescription = br.readLine();
 
-                if(h.getFilesWithTitles(fileTitle).size() == 0) {
-                    System.out.println("Title not found");
+                if(h.getFilesWithTitles(fileDescription).size() == 0) {
+                    System.out.println("Topic description not found");
                 }
                 else{
-                    isCorrectTitle = true;
+                    isCorrectDescription = true;
 
-                    String newTitle ="";
-                    ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    List<String> newDescriptionList = new ArrayList<>();
+                    String newDescription = "";
+                    String strings[] = {};
+                    ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileDescription));
                     System.out.println("Return to menu[R]");
                     for(String str: listWithTitles) {
                         System.out.println(str);
@@ -599,11 +603,15 @@ public class Client {
                     if (idFile.equals("R")){
                         checkCorrectOption(h);
                     } else{
-                        System.out.println("Enter the new title");
-                        newTitle = br.readLine();
+                        System.out.println("Enter the topic description");
+                        newDescription = br.readLine();
+                        strings = newDescription.split(",");
+
                     }
-                    String oldTitle = h.getName(idFile);
-                    System.out.println(h.changeFileTitle(oldTitle, newTitle, currentUserName));
+                    newDescriptionList = Arrays.asList(strings);
+                    ArrayList<String> newDescriptionArrayList = new ArrayList<>(newDescriptionList);
+                    ArrayList<String> oldDescription = h.getTopicDescription(idFile);
+                    System.out.println(h.changeFileDecription(oldDescription, newDescriptionArrayList, currentUserName));
                 }
 
             } catch (IOException e) {

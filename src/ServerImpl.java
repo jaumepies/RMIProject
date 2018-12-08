@@ -226,7 +226,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             JSONObject file = (JSONObject) f;
             if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
                     file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("topicList")).find() ||
+                    Pattern.CASE_INSENSITIVE).matcher(String.valueOf( file.get("topicList"))).find() ||
                     Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
                             file.get("name")).find()){
                 //System.out.println("Found title");
@@ -563,6 +563,18 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         return name;
     }
 
+    @Override
+    public ArrayList<String> getTopicDescription(String idFile) throws IOException, ParseException {
+        JSONArray jsonArray = getFilesList();
+        ArrayList<String> descriptionList = new ArrayList<>();
+        for(Object object: jsonArray) {
+            JSONObject infoFile = (JSONObject) object;
+            if(String.valueOf(infoFile.get("id")).equals(idFile))
+                descriptionList = (ArrayList<String>) infoFile.get("topicList");
+        }
+        return descriptionList;
+    }
+
     public int getIdFromUser(String userName) {
         try {
             ArrayUsers arrayUsers = new ArrayUsers();
@@ -648,29 +660,44 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
     }
 
-    public int getIdFromUser(String userName) {
-        try {
-            ArrayUsers arrayUsers = new ArrayUsers();
+    @Override
+    public String changeFileDecription(ArrayList<String> oldDescription, ArrayList<String> newDescriptionArrayList, String currentUserName) {
+
+        String stringToReturn = "";
+
+        try{
             ObjectMapper objectMapper = new ObjectMapper();
+            ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
+            ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
 
-            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-
-            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
-
-            for (User user: arrayUsers.usersArrayList) {
-                if(user.getUserName().equals(userName)){
-                    return user.getUserId();
+            for (DataObject dataObject : arrayListDataObject) {
+                if(dataObject.getTopicList().equals(oldDescription)) {
+                    if(dataObject.getIdUser() == getIdFromUser(currentUserName)) {
+                        dataObject.setTopicList(newDescriptionArrayList);
+                        stringToReturn = "The description " + newDescriptionArrayList + " has been modified";
+                        break;
+                    } else {
+                        stringToReturn = "You don't uploaded this file";
+                        break;
+                    }
                 }
             }
-            return -1;
+            arrayDataObj.setArrayDataObject(arrayListDataObject);
+
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            try {
+                objectMapper.writeValue(new File(FILE_INFO), arrayDataObj);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
 
         } catch (IOException e) {
             e.printStackTrace();
-            return -1;
         }
+        return stringToReturn;
     }
-
-
 
     public void doSubcriptionCallbacks(ArrayList<String> topicList) throws RemoteException{
         try {

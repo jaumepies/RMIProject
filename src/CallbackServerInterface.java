@@ -5,6 +5,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.rmi.*;
 import java.util.ArrayList;
 
@@ -65,4 +66,9 @@ public interface CallbackServerInterface extends Remote {
 
 
     public String changeFileTitle(String oldTitle, String newTitle, String currentUser) throws RemoteException;
+
+    public String changeFileDecription(ArrayList<String> oldDescription, ArrayList<String> newDescriptionArrayList, String currentUserName)
+            throws  RemoteException;
+
+    public ArrayList<String> getTopicDescription(String idFile) throws RemoteException, IOException, ParseException;
 }
