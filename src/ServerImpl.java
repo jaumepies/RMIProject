@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import static  java.lang.Math.toIntExact;
+import static java.lang.Math.toIntExact;
 
 public class ServerImpl extends UnicastRemoteObject
         implements CallbackServerInterface {
@@ -172,8 +172,9 @@ public class ServerImpl extends UnicastRemoteObject
 
         try {
             FileOutputStream fileOuputStream = new FileOutputStream(fileDest);
-            updateLastIdFile();
             int idFile = getLastIdFromFile();
+            updateLastIdFile(idFile);
+
             DataObject fileInfo = new DataObject(name, tag, fileDest.getName(), idUser, idFile);
             fileOuputStream.write(bytes);
             fileOuputStream.close();
@@ -368,7 +369,7 @@ public class ServerImpl extends UnicastRemoteObject
         }
     }
 
-    private void updateLastIdFile() {
+    private void updateLastIdFile(int newId) {
         JSONParser jsonParser = new JSONParser();
         ObjectMapper objectMapper = new ObjectMapper();
         try
@@ -377,14 +378,12 @@ public class ServerImpl extends UnicastRemoteObject
 
             JSONObject jsonObject = (JSONObject) obj;
 
-            if(jsonObject.size() == 0) {
-                jsonObject.put("lastIdFile", 1);
-            }
-            else{
-                int newId = toIntExact((Long) jsonObject.get("lastIdFile"))+1;
-            }
+            int lastId = toIntExact((Long) jsonObject.get("lastIdFile"));
+            if (lastId != newId){
+                jsonObject.put("lastIdFile", newId);
 
-            objectMapper.writeValue(new File(FILE_LASTIDFILE), jsonObject);
+                objectMapper.writeValue(new File(FILE_LASTIDFILE), jsonObject);
+            }
 
         }catch(Exception e){
             e.printStackTrace();
@@ -399,8 +398,16 @@ public class ServerImpl extends UnicastRemoteObject
             Object obj = jsonParser.parse(new FileReader(FILE_LASTIDFILE));
 
             JSONObject jsonObject = (JSONObject) obj;
+            if(jsonObject.size() == 0) {
+                jsonObject.put("lastIdFile", 1);
+                objectMapper.writeValue(new File(FILE_LASTIDFILE), jsonObject);
+                return 1;
+            }
+            else{
+                int newId = toIntExact((Long) jsonObject.get("lastIdFile"))+1;
+                return newId;
+            }
 
-            return  toIntExact((Long) jsonObject.get("lastIdFile"));
 
         }catch(Exception e){
             e.printStackTrace();
