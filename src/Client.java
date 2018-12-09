@@ -117,7 +117,7 @@ public class Client {
     private static void registNewUser(CallbackServerInterface h) {
         try {
             String userName, password, confirmation;
-            ArrayList<String> topicList = new ArrayList<String>();
+            ArrayList<String> topicList = new ArrayList<>();
 
             do{
                 System.out.println("Enter user name:");
@@ -161,6 +161,8 @@ public class Client {
         {
             e1.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

@@ -30,7 +30,7 @@ public interface CallbackServerInterface extends Remote {
     public void unregisterForCallback(CallbackClientInterface callbackClientObject, String userName)
             throws java.rmi.RemoteException, InterruptedException;
 
-    public byte[] fileToBytes(File file) throws java.rmi.RemoteException;
+    public byte[] fileToBytes(File file) throws java.rmi.RemoteException, InterruptedException;
     public File getFileToDownload(String fileName) throws java.rmi.RemoteException, InterruptedException;
 
     public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser)throws java.rmi.RemoteException;
@@ -46,7 +46,7 @@ public interface CallbackServerInterface extends Remote {
 
     public boolean checkCorrectUserName(String name) throws java.rmi.RemoteException;
 
-    public String registerNewUser(User newUser)throws java.rmi.RemoteException;
+    public String registerNewUser(User newUser) throws java.rmi.RemoteException, InterruptedException;
 
     public boolean checkCorrectUser(String userName, String password)throws java.rmi.RemoteException;
 
@@ -58,6 +58,6 @@ public interface CallbackServerInterface extends Remote {
     public String getFileName(String idFile) throws IOException, ParseException, InterruptedException;
     public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException, InterruptedException;
 
-    public int getLastIdFromUsers() throws RemoteException;
+    public int getLastIdFromUsers() throws RemoteException, InterruptedException;
     public int getIdFromUser(String userName) throws RemoteException;
 }
