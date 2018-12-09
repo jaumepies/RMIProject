@@ -6,6 +6,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.lang.reflect.Array;
+import java.net.MalformedURLException;
 import java.net.UnknownServiceException;
 import java.rmi.*;
 import java.util.ArrayList;
@@ -26,38 +27,26 @@ public class Client {
     static final String FILE_INFO = "./fileInfo.json";
     final public static int BUF_SIZE = 1024 * 64;
 
-
+    static String strIP;
+    static String portNum;
 
 
     public static void main(String args[]) {
         try {
-            int RMIPort;
-            String hostName;
-
-            //ARREGLAR EL PORT -------------------------------------------------------------------
-            System.out.println("Enter the RMIServer IP:");
-            String strIP =  br.readLine();
-            System.out.println("Enter the RMIregistry port number:");
-            String portNum = br.readLine();
-            RMIPort = Integer.parseInt(portNum);
-            String registryURL ="rmi://" + strIP +":" + portNum + "/some";
-            // find the remote object and cast it to an
-            //   interface object
+            boolean isConnected;
+            do {
+                isConnected = entryServerInfo();
+            }
+            while (!isConnected);
+            String registryURL = "rmi://" + strIP + ":" + portNum + "/some";
             CallbackServerInterface h = (CallbackServerInterface)Naming.lookup(registryURL);
+
             System.out.println("Lookup completed " );
             System.out.println("Server said " + h.sayHello());
             while(!endExecution) {
                 checkUserOption(h);
             }
-            /*try {
-                Thread.sleep(time * 1000);
-            }
-            catch (InterruptedException ex){ // sleep over
-            }
-            h.unregisterForCallback(callbackObj);
-            System.out.println("Unregistered for callback.");*/
             System.out.println("Execution finished");
-
 
         } // end try
         catch (RemoteException e1)
@@ -70,6 +59,41 @@ public class Client {
                     "Exception in Client: " + e);
         }
     } //end main
+
+    private static boolean entryServerInfo() {
+        try {
+            do {
+                System.out.println("Enter the Remote RMIServer IP or [localhost]:");
+                strIP = br.readLine();
+                System.out.println("Enter the RMIregistry port number:");
+                portNum = br.readLine();
+                if (strIP.equals("")) {
+                    System.out.println("You must enter an IP");
+                }
+                if (portNum.equals("")) {
+                    System.out.println("You must enter a port number");
+                }
+            }while (strIP.equals("") || portNum.equals(""));
+            String registryURL = "rmi://" + strIP + ":" + portNum + "/some";
+            // find the remote object and cast it to an
+            //   interface object
+            Naming.lookup(registryURL);
+            return true;
+        } catch (NotBoundException ignore) {
+            System.out.println("Impossible to connect to server");
+            return false;
+        } catch (RemoteException ignore) {
+            System.out.println("Impossible to connect to server");
+            return false;
+        } catch (MalformedURLException e) {
+            System.out.println("Impossible to connect to server");
+            return false;
+        } catch (IOException e) {
+            System.out.println("Impossible to connect to server");
+            return false;
+        }
+
+    }
 
     private static void checkUserOption(CallbackServerInterface h) throws InterruptedException {
         boolean correctOption = false;

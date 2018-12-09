@@ -13,7 +13,6 @@ public class Server {
         String portNum, registryURL, currentIp;
         try{
             System.out.println("Enter the RMIregistry port number:");
-            //ARREGLAR PORT --------------------------------------------------------
             portNum = br.readLine();
             int RMIPortNum = Integer.parseInt(portNum);
             startRegistry(RMIPortNum);
