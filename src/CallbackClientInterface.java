@@ -8,7 +8,7 @@ import java.rmi.*;
  */
 
 public interface CallbackClientInterface
-        extends java.rmi.Remote{
+        extends Remote{
     // This remote method is invoked by a callback
     // server to make a callback to an client which
     // implements this interface.
@@ -16,7 +16,7 @@ public interface CallbackClientInterface
     //                  client to process upon being called back.
 
     public String notifyMe(String message)
-            throws java.rmi.RemoteException;
+            throws RemoteException;
 
 
 } // end interface

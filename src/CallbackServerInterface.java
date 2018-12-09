@@ -14,7 +14,7 @@ import java.util.List;
 public interface CallbackServerInterface extends Remote {
 
     public String sayHello( )
-            throws java.rmi.RemoteException;
+            throws RemoteException;
 
 // This remote method allows an object client to
 // register for callback
@@ -23,35 +23,36 @@ public interface CallbackServerInterface extends Remote {
 //        to make its callbacks.
 
     public void registerForCallback(CallbackClientInterface callbackClientObject, String userName)
-            throws java.rmi.RemoteException, InterruptedException;
+            throws RemoteException, InterruptedException;
 
 // This remote method allows an object client to
 // cancel its registration for callback
 
     public void unregisterForCallback(CallbackClientInterface callbackClientObject, String userName)
-            throws java.rmi.RemoteException, InterruptedException;
+            throws RemoteException, InterruptedException;
 
-    public byte[] fileToBytes(File file) throws java.rmi.RemoteException, InterruptedException;
-    public File getFileToDownload(String fileName) throws java.rmi.RemoteException, InterruptedException;
+    public byte[] fileToBytes(File file) throws RemoteException, InterruptedException;
+    public File getFileToDownload(String fileName) throws RemoteException, InterruptedException;
 
-    public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser)throws java.rmi.RemoteException;
+    public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser)throws RemoteException;
 
-    public byte[] download(String name) throws java.rmi.RemoteException, InterruptedException;
+    public byte[] download(String name) throws RemoteException, InterruptedException;
 
     public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException, InterruptedException;
 
     public String downloadFile(JSONObject jsonObject) throws IOException, InterruptedException;
     public String downloadFileString(String string) throws IOException, InterruptedException;
 
-    public ArrayList<String> selectFile(JSONArray filesWithTitle) throws java.rmi.RemoteException, InterruptedException;
+    public ArrayList<String> selectFile(JSONArray filesWithTitle) throws RemoteException, InterruptedException;
+    public ArrayList<String> selectFileWithDescription(JSONArray filesWithTitle) throws RemoteException, InterruptedException;
 
-    public boolean checkCorrectUserName(String name) throws java.rmi.RemoteException;
+    public boolean checkCorrectUserName(String name) throws RemoteException;
 
-    public String registerNewUser(User newUser) throws java.rmi.RemoteException, InterruptedException;
+    public String registerNewUser(User newUser) throws RemoteException, InterruptedException;
 
-    public boolean checkCorrectUser(String userName, String password)throws java.rmi.RemoteException;
+    public boolean checkCorrectUser(String userName, String password)throws RemoteException;
 
-    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException, InterruptedException;
+    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws RemoteException, InterruptedException;
     public JSONArray getFilesList() throws ParseException, IOException, InterruptedException;
 
     public String deleteFileInfo(JSONArray filesList, String idFile, String currentUser) throws IOException;
@@ -75,4 +76,6 @@ public interface CallbackServerInterface extends Remote {
     public String addSubscription(ArrayList<String> newSubscriptionArrayList, String currentUser) throws RemoteException;
 
     public String deleteSubscription(List<String> deleteSubscriptionList, String currentUserName) throws RemoteException;
+
+    public String getSubscriptions(String currentUserName) throws RemoteException;
 }
