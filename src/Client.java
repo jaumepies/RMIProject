@@ -9,6 +9,8 @@ import java.lang.reflect.Array;
 import java.net.UnknownServiceException;
 import java.rmi.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 
@@ -213,7 +215,7 @@ public class Client {
         while(!correctOption){
 
             System.out.println("\nChoose your option:");
-            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Exit[E]");
+            System.out.println("Download[D] Upload[U] Search[S] Remove[R] Change[C] Manage Subscriptions[M] Log Out[L]");
 
             String option = "";
             try {
@@ -246,12 +248,16 @@ public class Client {
                 deleteOption(h);
                 return true;
 
-            case "M": //Modify
-                modifyOption(h);
+            case "C": //Change
+                changeOption(h);
+                return true;
+
+            case "M": //Manage Subscription
+                manageSubscriptionOption(h);
                 return true;
 
 
-            case "E": //Exit
+            case "L": //Log Out
                 try {
                     h.unregisterForCallback(callbackObj, currentUserName);
                     isFinished = true;
@@ -278,7 +284,7 @@ public class Client {
                 File file = getFile(fileNameUp);
 
                 if(file == null) {
-                    System.out.println("The file does not exist");
+                    System.out.println("The file does not exists");
                 } else {
                     //Create a byte array to send
                     byte[] fileBytes = fileToBytes(file);
@@ -488,12 +494,132 @@ public class Client {
                     if(idFile.equals("R")) {
                         checkCorrectOption(h);
                     }
+                    System.out.println("Are you sure? \n Yes[Y] / No[N]");
+                    String sure = br.readLine();
+                    if(sure.equals("Y")) {
+                        String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile, currentUserName);
 
-                    String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile);
+                        System.out.println(deleteInfo);
+                    }
+                    else{
+                        deleteOption(h);
+                    }
+                }
 
-                    System.out.println(deleteInfo);
+            } catch (IOException e) {
 
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
+    private static void changeOption(CallbackServerInterface h){
+
+        try {
+            boolean isCorrectOption = false;
+            while (!isCorrectOption) {
+                System.out.println("Return to menu[R] Change Title[T] Change Description[D]");
+                String option = br.readLine();
+                switch (option){
+                    case "R":
+                        checkCorrectOption(h);
+                        isCorrectOption = true;
+                        break;
+
+                    case "T":
+                        changeTitle(h);
+                        isCorrectOption = true;
+                        break;
+
+                    case "D":
+                        changeDescription(h);
+                        isCorrectOption = true;
+                        break;
+
+                    default:
+                        System.out.println("Incorrect option");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static void changeTitle(CallbackServerInterface h) {
+        boolean isCorrectTitle = false;
+        while (!isCorrectTitle) {
+            System.out.println("Enter the title to modify");
+            try{
+                String fileTitle = br.readLine();
+
+                if(h.getFilesWithTitles(fileTitle).size() == 0) {
+                    System.out.println("Title not found");
+                }
+                else{
+                    isCorrectTitle = true;
+
+                    String newTitle ="";
+                    ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
+                    System.out.println("Return to menu[R]");
+                    for(String str: listWithTitles) {
+                        System.out.println(str);
+                    }
+                    String idFile = br.readLine();
+                    if (idFile.equals("R")){
+                        checkCorrectOption(h);
+                    } else{
+                        System.out.println("Enter the new title");
+                         newTitle = br.readLine();
+                    }
+                    String oldTitle = h.getName(idFile);
+                    System.out.println(h.changeFileTitle(oldTitle, newTitle, currentUserName));
+                }
+
+            } catch (IOException e) {
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void changeDescription(CallbackServerInterface h) {
+        boolean isCorrectDescription = false;
+        while (!isCorrectDescription) {
+            System.out.println("Enter the topic description to modify");
+            try{
+                String fileDescription = br.readLine();
+
+                if(h.getFilesWithTitles(fileDescription).size() == 0) {
+                    System.out.println("Topic description not found");
+                }
+                else{
+                    isCorrectDescription = true;
+
+                    List<String> newDescriptionList = new ArrayList<>();
+                    String newDescription = "";
+                    String strings[] = {};
+                    ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileDescription));
+                    System.out.println("Return to menu[R]");
+                    for(String str: listWithTitles) {
+                        System.out.println(str);
+                    }
+                    String idFile = br.readLine();
+                    if (idFile.equals("R")){
+                        checkCorrectOption(h);
+                    } else{
+                        System.out.println("Enter the topic description");
+                        newDescription = br.readLine();
+                        strings = newDescription.split(",");
+
+                    }
+                    newDescriptionList = Arrays.asList(strings);
+                    ArrayList<String> newDescriptionArrayList = new ArrayList<>(newDescriptionList);
+                    ArrayList<String> oldDescription = h.getTopicDescription(idFile);
+                    System.out.println(h.changeFileDecription(oldDescription, newDescriptionArrayList, currentUserName));
                 }
 
             } catch (IOException e) {
@@ -506,7 +632,80 @@ public class Client {
         }
     }
 
-    private static void modifyOption(CallbackServerInterface h) {
+    private static void manageSubscriptionOption(CallbackServerInterface h) {
+        try {
+            boolean isCorrectOption = false;
+            while (!isCorrectOption) {
+                System.out.println("Return to menu[R] Add subscription[A] Delete subscription[D]");
+                String option = br.readLine();
+                switch (option){
+                    case "R":
+                        checkCorrectOption(h);
+                        isCorrectOption = true;
+                        break;
+
+                    case "A":
+                        addSubscription(h);
+                        isCorrectOption = true;
+                        break;
+
+                    case "D":
+                        deleteSubscription(h);
+                        isCorrectOption = true;
+                        break;
+
+                    default:
+                        System.out.println("Incorrect option");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
+
+    private static void deleteSubscription(CallbackServerInterface h) {
+        System.out.println("Delete the subscription");
+        try {
+            String deleteSubscription = br.readLine();
+
+            String[] strings = deleteSubscription.split(",");
+
+            ArrayList<String> deleteSubscriptionArrayList = new ArrayList<>();
+
+            for (String str : strings) {
+                deleteSubscriptionArrayList.add(str.trim());
+            }
+
+            System.out.println(h.deleteSubscription(deleteSubscriptionArrayList, currentUserName));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private static void addSubscription(CallbackServerInterface h) {
+        System.out.println("Add the new subscription");
+        try {
+            String newSubscription = br.readLine();
+
+            String[] strings = newSubscription.split(",");
+
+            ArrayList<String> newSubscriptionArrayList = new ArrayList<>();
+
+            for (String str : strings) {
+                newSubscriptionArrayList.add(str.trim());
+            }
+
+            System.out.println(h.addSubscription(newSubscriptionArrayList, currentUserName));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }//end class

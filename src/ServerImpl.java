@@ -212,21 +212,20 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
             JSONArray filesWithTitle = new JSONArray();
 
-            for (Object f : filesList) {
-                JSONObject file = (JSONObject) f;
-                if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                        file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                        Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("topicList")).find() ||
-                        Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                                file.get("name")).find()){
-                    //System.out.println("Found title");
-                    filesWithTitle.add(file);
-                } else {
-                    //System.out.println("Title not found");
-                }
+        for (Object f : filesList) {
+            JSONObject file = (JSONObject) f;
+            if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                    file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
+                    Pattern.CASE_INSENSITIVE).matcher(String.valueOf( file.get("topicList"))).find() ||
+                    Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                            file.get("name")).find()){
+                //System.out.println("Found title");
+                filesWithTitle.add(file);
+            } else {
+                //System.out.println("Title not found");
             }
-            semaphore.release();
-            return filesWithTitle;
+        }
+        return filesWithTitle;
     }
 
     public JSONArray getFilesList() throws ParseException, IOException, InterruptedException {
@@ -265,7 +264,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         byte[] downfileBytes = download(fileNameDwn);
 
         if(downfileBytes == null) {
-            System.out.println("The file does not exist");
+            System.out.println("The file does not exists");
         } else {
             FileOutputStream fileOuputStream = new FileOutputStream(fileDestDwn);
 
@@ -498,9 +497,11 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
     }
 
     @Override
-    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException, InterruptedException {
-        semaphore.acquire();
+    public String deleteFileInfo(JSONArray filesList, String idFile, String currentUser) throws IOException {
+
         String titleToDelete = "";
+        String fileNameToDelete = "";
+        String stringToReturn = "";
 
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
@@ -508,10 +509,24 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
         for (DataObject dataObject : arrayListDataObject) {
             if(String.valueOf(dataObject.getId()).equals(idFile)) {
-                titleToDelete = dataObject.getName();
-                arrayListDataObject.remove(dataObject);
-                break;
+                if(dataObject.getIdUser() == getIdFromUser(currentUser)) {
+                    titleToDelete = dataObject.getName();
+                    fileNameToDelete = dataObject.getFileName();
+                    arrayListDataObject.remove(dataObject);
 
+                    File file = new File("./Server/" + fileNameToDelete);
+
+                    if (file.delete()) {
+                        stringToReturn = "The file " + fileNameToDelete + " with title " + titleToDelete + " has been deleted";
+                    } else {
+                        stringToReturn = titleToDelete + "does not exists";
+                    }
+
+                    break;
+                } else {
+                    stringToReturn = "You don't uploaded this file";
+                    break;
+                }
             }
         }
         arrayDataObj.setArrayDataObject(arrayListDataObject);
@@ -523,7 +538,16 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             e.printStackTrace();
         }
         semaphore.release();
-        return "The title " + titleToDelete + "has been deleted";
+        deleteFileFromServer(fileNameToDelete);
+
+        return stringToReturn;
+    }
+
+    private void deleteFileFromServer(String fileNameToDelete) {
+        File file = new File("./receivedData/" + fileNameToDelete);
+        if(file.delete()){
+            System.out.println(fileNameToDelete + " deleted");
+        }else System.out.println("File does not exists");
     }
 
     public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException{
@@ -543,6 +567,30 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }
         semaphore.release();
         return fileName;
+    }
+
+    @Override
+    public String getName(String idFile) throws IOException, ParseException {
+        JSONArray jsonArray = getFilesList();
+        String name = "";
+        for(Object object: jsonArray) {
+            JSONObject infoFile = (JSONObject) object;
+            if(String.valueOf(infoFile.get("id")).equals(idFile))
+                name = (String) infoFile.get("name");
+        }
+        return name;
+    }
+
+    @Override
+    public ArrayList<String> getTopicDescription(String idFile) throws IOException, ParseException {
+        JSONArray jsonArray = getFilesList();
+        ArrayList<String> descriptionList = new ArrayList<>();
+        for(Object object: jsonArray) {
+            JSONObject infoFile = (JSONObject) object;
+            if(String.valueOf(infoFile.get("id")).equals(idFile))
+                descriptionList = (ArrayList<String>) infoFile.get("topicList");
+        }
+        return descriptionList;
     }
 
     public int getIdFromUser(String userName) {
@@ -567,7 +615,107 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }
     }
 
+    public String getUserFromId(int idUser) {
+        try {
+            ArrayUsers arrayUsers = new ArrayUsers();
+            ObjectMapper objectMapper = new ObjectMapper();
 
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+            arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+
+            for (User user: arrayUsers.usersArrayList) {
+                if(user.getUserId() == idUser){
+                    return user.getUserName();
+                }
+            }
+            return "";
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    @Override
+    public String changeFileTitle(String oldTitle, String newTitle, String currentUser) {
+
+
+        String stringToReturn = "";
+
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
+            ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
+
+            for (DataObject dataObject : arrayListDataObject) {
+                if(String.valueOf(dataObject.getName()).equals(oldTitle)) {
+                    if(dataObject.getIdUser() == getIdFromUser(currentUser)) {
+                        dataObject.setName(newTitle);
+                        stringToReturn = "The title " + newTitle + " has been modified";
+                        break;
+                    } else {
+                        stringToReturn = "You don't uploaded this file";
+                        break;
+                    }
+                }
+            }
+            arrayDataObj.setArrayDataObject(arrayListDataObject);
+
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            try {
+                objectMapper.writeValue(new File(FILE_INFO), arrayDataObj);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringToReturn;
+
+    }
+
+    @Override
+    public String changeFileDecription(ArrayList<String> oldDescription, ArrayList<String> newDescriptionArrayList, String currentUserName) {
+
+        String stringToReturn = "";
+
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
+            ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
+
+            for (DataObject dataObject : arrayListDataObject) {
+                if(dataObject.getTopicList().equals(oldDescription)) {
+                    if(dataObject.getIdUser() == getIdFromUser(currentUserName)) {
+                        dataObject.setTopicList(newDescriptionArrayList);
+                        stringToReturn = "The description " + newDescriptionArrayList + " has been modified";
+                        break;
+                    } else {
+                        stringToReturn = "You don't uploaded this file";
+                        break;
+                    }
+                }
+            }
+            arrayDataObj.setArrayDataObject(arrayListDataObject);
+
+            //objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            try {
+                objectMapper.writeValue(new File(FILE_INFO), arrayDataObj);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringToReturn;
+    }
 
     public void doSubcriptionCallbacks(ArrayList<String> topicList) throws RemoteException{
         try {
@@ -606,5 +754,66 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             }
         }
         return matches;
+    }
+
+    @Override
+    public String addSubscription(ArrayList<String> newSubscriptionArrayList, String currentUser) {
+        String stringToReturn = "No add";
+
+        try {
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayUsers arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+            ArrayList<User> usersArrayList = arrayUsers.getUsersArrayList();
+
+            for (User user : usersArrayList) {
+                if (user.getUserName().equals(currentUser)){
+                    user.addSubscriptionList(newSubscriptionArrayList);
+                    stringToReturn = "Now you have this subscriptions " + user.getSubscriptionList();
+                    break;
+
+                }
+
+            }
+            arrayUsers.setArrayUsers(usersArrayList);
+
+            objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
+
+        } catch (RemoteException e1){
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringToReturn;
+    }
+
+    @Override
+    public String deleteSubscription(List<String> deleteSubscriptionList, String currentUserName) {
+        String stringToReturn = "No delete";
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayUsers arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+            ArrayList<User> usersArrayList = arrayUsers.getUsersArrayList();
+
+            for (User user : usersArrayList) {
+                if (user.getUserName().equals(currentUserName)){
+                    user.deleteSubscriptionList(deleteSubscriptionList);
+                    stringToReturn = "Now you have this subscriptions " + user.getSubscriptionList();
+                    break;
+
+                }
+
+            }
+            arrayUsers.setArrayUsers(usersArrayList);
+
+            objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
+
+        } catch (RemoteException e1){
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringToReturn;
     }
 }// end ServerImpl class

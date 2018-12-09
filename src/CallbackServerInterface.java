@@ -5,9 +5,10 @@ import org.json.simple.parser.ParseException;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.rmi.*;
 import java.util.ArrayList;
-
+import java.util.List;
 
 
 public interface CallbackServerInterface extends Remote {
@@ -53,11 +54,25 @@ public interface CallbackServerInterface extends Remote {
     public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException, InterruptedException;
     public JSONArray getFilesList() throws ParseException, IOException, InterruptedException;
 
-    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException, InterruptedException;
+    public String deleteFileInfo(JSONArray filesList, String idFile, String currentUser) throws IOException;
 
-    public String getFileName(String idFile) throws IOException, ParseException, InterruptedException;
-    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException, InterruptedException;
+    public String getFileName(String idFile) throws IOException, ParseException;
+    public String getName(String idFile) throws IOException, ParseException;
+    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException;
 
     public int getLastIdFromUsers() throws RemoteException, InterruptedException;
     public int getIdFromUser(String userName) throws RemoteException;
+    public String getUserFromId(int idUser) throws RemoteException;
+
+
+    public String changeFileTitle(String oldTitle, String newTitle, String currentUser) throws RemoteException;
+
+    public String changeFileDecription(ArrayList<String> oldDescription, ArrayList<String> newDescriptionArrayList, String currentUserName)
+            throws  RemoteException;
+
+    public ArrayList<String> getTopicDescription(String idFile) throws RemoteException, IOException, ParseException;
+
+    public String addSubscription(ArrayList<String> newSubscriptionArrayList, String currentUser) throws RemoteException;
+
+    public String deleteSubscription(List<String> deleteSubscriptionList, String currentUserName) throws RemoteException;
 }

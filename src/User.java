@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class User implements java.io.Serializable {
     private String userName;
@@ -55,5 +57,21 @@ public class User implements java.io.Serializable {
 
     public void addSubscription(String sub){
         this.subscriptionList.add(sub);
+    }
+
+    public void addSubscriptionList(ArrayList<String> newSubscriptionArrayList) {
+        for (String newSubs : newSubscriptionArrayList){
+            this.subscriptionList.add(newSubs);
+
+        }
+    }
+
+
+    public void deleteSubscriptionList(List<String> deleteSubscriptionList) {
+        for (String deleteSubs : deleteSubscriptionList) {
+            if((this.subscriptionList).contains(deleteSubs)){
+                this.subscriptionList.remove(deleteSubs);
+            }
+        }
     }
 }
