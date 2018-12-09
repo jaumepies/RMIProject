@@ -21,6 +21,7 @@ public class Client {
     static CallbackClientInterface callbackObj;
     static boolean isFinished = false;
     static boolean endExecution = false;
+    static boolean jump = false;
 
     static String currentUserName;
     static final String FILE_INFO = "./fileInfo.json";
@@ -55,6 +56,7 @@ public class Client {
             System.out.println("Server said " + h.sayHello());
             while(!endExecution) {
                 checkUserOption(h);
+
             }
             /*try {
                 Thread.sleep(time * 1000);
@@ -79,22 +81,27 @@ public class Client {
     } //end main
 
     private static void checkUserOption(CallbackServerInterface h) throws InterruptedException {
+
         boolean correctOption = false;
         String option = "";
 
-        while(!correctOption){
-            isFinished=false;
-            System.out.println("\nChoose your option:");
-            System.out.println("Login[L] New User[N] Exit[E]");
+        while (!correctOption) {
+            if(!jump) {
+                isFinished = false;
+                System.out.println("\nChoose your option:");
+                System.out.println("Login[L] New User[N] Exit[E]");
 
-            try {
-                option = br.readLine();
-            } catch (IOException e) {
+                try {
+                    option = br.readLine();
+                } catch (IOException e) {
+                }
+
+                correctOption = isCorrectUserOption(option, h);
+            } else {
+                return;
             }
-
-            correctOption = isCorrectUserOption(option, h);
-
         }
+
     }
 
     private static boolean isCorrectUserOption(String option, CallbackServerInterface h) throws InterruptedException {
@@ -126,7 +133,9 @@ public class Client {
                     System.out.println("Enter user name / Return[R]");
                     userName = br.readLine();
                     if(userName.equals("R")) {
-                        checkUserOption(h);//jump
+                        checkUserOption(h);
+                        jump = true;
+                        return;
                     }
                     if (userName.length() == 0) {
                         System.out.println("Username is empty");
@@ -194,9 +203,13 @@ public class Client {
             String userName, password;
             boolean correctUser;
             do{
-                System.out.println("Enter user name:");
+                System.out.println("Enter user name / Return[R]");
                 userName = br.readLine();
-
+                if(userName.equals("R")) {
+                    checkUserOption(h);
+                    jump = true;
+                    return;
+                }
                 System.out.println("Enter the password:");
                 password = br.readLine();
                 correctUser = h.checkCorrectUser(userName, password);
