@@ -13,6 +13,7 @@ import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Pattern;
 import static java.lang.Math.toIntExact;
 
@@ -28,6 +29,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
     static final String FILE_LASTIDUSER= "lastiduser.json";
     static final String FILE_LASTIDFILE= "lastidfile.json";
 
+    public static final Semaphore semaphore = new Semaphore(1, true);
 
 
     private Vector clientList;
@@ -48,20 +50,21 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         return("hello");
     }
 
-    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject, String userName) throws java.rmi.RemoteException{
+    public synchronized void registerForCallback(CallbackClientInterface callbackClientObject, String userName)
+            throws java.rmi.RemoteException, InterruptedException {
         // store the callback object into the vector
-        //carrega id del usuari
-        Integer idUser = getIdFromUser(userName);
-        if(!clientHash.containsKey(idUser)){
-            clientHash.put(idUser, callbackClientObject);
-            System.out.println("New client logged ");
-            doCallbacks();
-        }
-        /*if (!(clientList.contains(callbackClientObject))) {
-            clientList.addElement(callbackClientObject);
-            System.out.println("Registered new client ");
-            doCallbacks();
-        }*/ // end if
+            semaphore.acquire();
+
+            //carrega id del usuari
+            Integer idUser = getIdFromUser(userName);
+            if(!clientHash.containsKey(idUser)){
+                clientHash.put(idUser, callbackClientObject);
+                System.out.println("New client logged ");
+                doCallbacks();
+
+                semaphore.release();
+            }
+            semaphore.release();
     }
 
     // This remote method allows an object client to
@@ -69,21 +72,19 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 // @param id is an ID for the client; to be used by
 // the server to uniquely identify the registered client.
     public synchronized void unregisterForCallback(CallbackClientInterface callbackClientObject, String userName)
-            throws java.rmi.RemoteException{
+            throws java.rmi.RemoteException, InterruptedException {
+
+        semaphore.acquire();
+
         Integer idUser = getIdFromUser(userName);
         if (clientHash.remove(idUser, callbackClientObject)) {
             System.out.println("Client "+ userName +" logged out");
+            semaphore.release();
         }
         else {
-            System.out.println(
-                    "client wasn't logged.");
+            System.out.println("client wasn't logged.");
+            semaphore.release();
         }
-        /*if (clientList.removeElement(callbackClientObject)) {
-            System.out.println("Unregistered client ");
-        } else {
-            System.out.println(
-                    "unregister: client wasn't registered.");
-        }*/
     }
 
     private synchronized void doCallbacks( ) throws java.rmi.RemoteException{
@@ -100,35 +101,25 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             index++;
         }
         System.out.println("********************************\n" + "Server completed callbacks ---");
-        /*for (int i = 0; i < clientList.size(); i++){
-            System.out.println("doing "+ i +"-th callback\n");
-            // convert the vector object to a callback object
-            CallbackClientInterface nextClient = (CallbackClientInterface)clientList.elementAt(i);
-            // invoke the callback method
-            nextClient.notifyMe("Number of registered clients=" +  clientList.size());
-        }*/// end for
-
     } // doCallbacks
 
-    public File getFileToDownload(String fileName){
-
+    public File getFileToDownload(String fileName) throws InterruptedException {
+        semaphore.acquire();
         File file = new File("./Server/"+fileName);
         if(!file.exists()) {
+            semaphore.release();
             return null;
         }
+        semaphore.release();
         return file;
     }
 
     @Override
     public byte[] fileToBytes(File file) {
-        /*
-        FileInputStream fileInputStream = new FileInputStream(file);
-        ByteArrayOutputStream bOutputStream = new ByteArrayOutputStream();
-        bOutputStream.toByteArray(fileInputStream);
-        */
         byte[] bytes = new byte[BUF_SIZE];
 
         try {
+            semaphore.acquire();
             FileInputStream fis = null;
             try {
                 fis = new FileInputStream(file);
@@ -154,12 +145,16 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             bytes = bos.toByteArray();
             bos.close(); // should be inside a finally block
 
-
         } catch (IOException e) {
             // handle IOException
             e.printStackTrace();
+            semaphore.release();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            semaphore.release();
+            return bytes;
         }
-
+        semaphore.release();
         return bytes;
     }
 
@@ -167,6 +162,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
     public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser) {
 
         try {
+            semaphore.acquire();
             FileOutputStream fileOuputStream = new FileOutputStream(fileDest);
             int idFile = getLastIdFromFile();
             updateLastIdFile(idFile);
@@ -190,75 +186,89 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             doSubcriptionCallbacks(topicList);
 
             System.out.println("File: " + fileDest.getName() + " uploaded correctly.");
+            semaphore.release();
             return "File: " + fileDest.getName() + " uploaded correctly.";
         }  catch (IOException e) {
             e.printStackTrace();
+            semaphore.release();
+            return "Upload error!!!!";
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            semaphore.release();
             return "Upload error!!!!";
         }
     }
 
     @Override
-    public byte[]  download( String name) {
+    public byte[]  download( String name) throws InterruptedException {
         //byte[] bytes = new byte[BUF_SIZE];
-        File fileSource = getFileToDownload(name);
+            semaphore.acquire();
 
-        if(fileSource == null) {
-            return null;
-        }
-        byte[] fileBytes = fileToBytes(fileSource);
+            File fileSource = getFileToDownload(name);
 
-        System.out.println("File: " + fileSource.getName() + " downloaded correctly.");
-
-        return fileBytes;
-
-    }
-
-    @Override
-    public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException {
-
-
-        JSONArray filesList = getFilesList();
-        //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
-
-        JSONArray filesWithTitle = new JSONArray();
-
-        for (Object f : filesList) {
-            JSONObject file = (JSONObject) f;
-            if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                    file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("topicList")).find() ||
-                    Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                            file.get("name")).find()){
-                //System.out.println("Found title");
-                filesWithTitle.add(file);
-            } else {
-                //System.out.println("Title not found");
+            if(fileSource == null) {
+                semaphore.release();
+                return null;
             }
-        }
-        return filesWithTitle;
+            byte[] fileBytes = fileToBytes(fileSource);
+
+            System.out.println("File: " + fileSource.getName() + " downloaded correctly.");
+            semaphore.release();
+            return fileBytes;
     }
 
-    public JSONArray getFilesList() throws ParseException, IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JSONParser parser = new JSONParser();
-        String stringJSON = mapper.writeValueAsString(parser.parse(new FileReader(FILE_INFO)));
+    @Override
+    public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException, InterruptedException {
+            semaphore.acquire();
 
+            JSONArray filesList = getFilesList();
+            //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
 
-        JSONObject json = (JSONObject) parser.parse(stringJSON);
-        return (JSONArray) json.get("arrayListDataObject");
+            JSONArray filesWithTitle = new JSONArray();
+
+            for (Object f : filesList) {
+                JSONObject file = (JSONObject) f;
+                if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                        file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
+                        Pattern.CASE_INSENSITIVE).matcher((CharSequence) file.get("topicList")).find() ||
+                        Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                                file.get("name")).find()){
+                    //System.out.println("Found title");
+                    filesWithTitle.add(file);
+                } else {
+                    //System.out.println("Title not found");
+                }
+            }
+            semaphore.release();
+            return filesWithTitle;
+    }
+
+    public JSONArray getFilesList() throws ParseException, IOException, InterruptedException {
+            semaphore.acquire();
+
+            ObjectMapper mapper = new ObjectMapper();
+            JSONParser parser = new JSONParser();
+            String stringJSON = mapper.writeValueAsString(parser.parse(new FileReader(FILE_INFO)));
+
+            JSONObject json = (JSONObject) parser.parse(stringJSON);
+
+            semaphore.release();
+            return (JSONArray) json.get("arrayListDataObject");
 
     }
 
     @Override
-    public String downloadFile(JSONObject jsonObject) throws IOException {
+    public String downloadFile(JSONObject jsonObject) throws IOException, InterruptedException {
+        semaphore.acquire();
         String fileNameDwn = jsonObject.get("fileName").toString();
+        semaphore.release();
         return downloadFileString(fileNameDwn);
 
     }
 
-    public String downloadFileString(String fileNameDwn) throws IOException {
+    public String downloadFileString(String fileNameDwn) throws IOException, InterruptedException {
         String copyName = fileNameDwn;
-
+        semaphore.acquire();
         File fileDestDwn = new File("./Client/"+fileNameDwn);
 
         while(fileDestDwn.exists()) {
@@ -285,23 +295,27 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
                 System.out.println("Download error!!!!");
             }
         }
+        semaphore.release();
         return "File: " + fileDestDwn.getName() + " downloaded correctly.";
     }
 
     @Override
-    public ArrayList<String> selectFile(JSONArray filesWithTitle) {
+    public ArrayList<String> selectFile(JSONArray filesWithTitle) throws InterruptedException {
+        semaphore.acquire();
         ArrayList<String> arrayList = new ArrayList<>();
         for (int i = 0; i < filesWithTitle.size(); i++) {
             Object f = filesWithTitle.get(i);
             JSONObject file = (JSONObject) f;
             arrayList.add(file.get("name") + "[" + file.get("id") +"] ");
         }
+        semaphore.release();
         return arrayList;
     }
 
     @Override
     public boolean checkCorrectUserName(String name) {
         try {
+            semaphore.acquire();
             ArrayUsers arrayUsers = new ArrayUsers();
             ObjectMapper objectMapper = new ObjectMapper();
 
@@ -310,12 +324,16 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
 
             if (arrayUsers.exists(name)){
+                semaphore.release();
                 return false;
             }
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        semaphore.release();
         return true;
     }
 
@@ -325,6 +343,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
+            semaphore.acquire();
             objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
             arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
@@ -338,12 +357,19 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             updateLastIdUser(newUser.getUserId());
 
             System.out.printf("User: "+ newUser.getUserName() + " was registered correctly.");
+            semaphore.release();
             return "User: "+ newUser.getUserName() + " was registered correctly.";
         } catch (RemoteException e1){
             e1.printStackTrace();
+            semaphore.release();
             return "Error, registering the new user!!!";
         } catch (IOException e) {
             e.printStackTrace();
+            semaphore.release();
+            return "Error, registering the new user!!!";
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            semaphore.release();
             return "Error, registering the new user!!!";
         }
     }
@@ -353,6 +379,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         ObjectMapper objectMapper = new ObjectMapper();
         try
         {
+            semaphore.acquire();
             Object obj = jsonParser.parse(new FileReader(FILE_LASTIDUSER));
 
             JSONObject jsonObject = (JSONObject) obj;
@@ -366,6 +393,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }catch(Exception e){
             e.printStackTrace();
         }
+        semaphore.release();
     }
 
     private void updateLastIdFile(int newId) {
@@ -373,6 +401,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         ObjectMapper objectMapper = new ObjectMapper();
         try
         {
+            semaphore.acquire();
             Object obj = jsonParser.parse(new FileReader(FILE_LASTIDFILE));
 
             JSONObject jsonObject = (JSONObject) obj;
@@ -387,6 +416,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }catch(Exception e){
             e.printStackTrace();
         }
+        semaphore.release();
     }
 
     public int getLastIdFromFile() throws RemoteException{
@@ -394,22 +424,26 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         ObjectMapper objectMapper = new ObjectMapper();
         try
         {
+            semaphore.acquire();
             Object obj = jsonParser.parse(new FileReader(FILE_LASTIDFILE));
 
             JSONObject jsonObject = (JSONObject) obj;
             if(jsonObject.size() == 0) {
                 jsonObject.put("lastIdFile", 1);
                 objectMapper.writeValue(new File(FILE_LASTIDFILE), jsonObject);
+                semaphore.release();
                 return 1;
             }
             else{
                 int newId = toIntExact((Long) jsonObject.get("lastIdFile"))+1;
+                semaphore.release();
                 return newId;
             }
 
 
         }catch(Exception e){
             e.printStackTrace();
+            semaphore.release();
             return -1;
         }
 
@@ -420,6 +454,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         ObjectMapper objectMapper = new ObjectMapper();
         try
         {
+            semaphore.acquire();
             Object obj = jsonParser.parse(new FileReader(FILE_LASTIDUSER));
 
             JSONObject jsonObject = (JSONObject) obj;
@@ -428,13 +463,16 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
                 jsonObject.put("lastIdUser", 0);
 
                 objectMapper.writeValue(new File(FILE_LASTIDUSER), jsonObject);
+                semaphore.release();
                 return 0;
             }
             else
+                semaphore.release();
                 return  toIntExact((Long) jsonObject.get("lastIdUser"));
 
         }catch(Exception e){
             e.printStackTrace();
+            semaphore.release();
             return -1;
         }
 
@@ -443,6 +481,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
     @Override
     public boolean checkCorrectUser(String userName, String password) {
         try {
+            semaphore.acquire();
             ArrayUsers arrayUsers = new ArrayUsers();
             ObjectMapper objectMapper = new ObjectMapper();
 
@@ -452,19 +491,27 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
             for (User user: arrayUsers.usersArrayList) {
                 if(user.getUserName().equals(userName) && user.getPassword().equals(password)){
+                    semaphore.release();
                     return true;
                 }
             }
+            semaphore.release();
             return false;
 
         } catch (IOException e) {
             e.printStackTrace();
+            semaphore.release();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            semaphore.release();
             return false;
         }
     }
 
     @Override
-    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) {
+    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws InterruptedException {
+        semaphore.acquire();
         JSONObject searchedFile = new JSONObject();
         for(Object f: filesList) {
             JSONObject file = (JSONObject) f;
@@ -476,15 +523,15 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         fileInfo.add("The title is: " + searchedFile.get("name"));
         fileInfo.add("The topic description is: " + searchedFile.get("topicList"));
         fileInfo.add("The file name is: " + searchedFile.get("fileName"));
-
+        semaphore.release();
         return fileInfo;
     }
 
     @Override
-    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException {
-
+    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException, InterruptedException {
         String titleToDelete = "";
 
+        semaphore.acquire();
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayDataObject arrayDataObj = getArrayDataObject(objectMapper);
         ArrayList<DataObject> arrayListDataObject = arrayDataObj.getArrayListDataObject();
@@ -505,18 +552,20 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        semaphore.release();
         return "The title " + titleToDelete + "has been deleted";
     }
 
-    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException {
-
+    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException, InterruptedException {
+        semaphore.acquire();
         ArrayDataObject arrayDataObject = objectMapper.readValue(new File(FILE_INFO), ArrayDataObject.class);
+        semaphore.release();
         return arrayDataObject;
     }
 
     @Override
-    public String getFileName(String idFile) throws IOException, ParseException {
+    public String getFileName(String idFile) throws IOException, ParseException, InterruptedException {
+        semaphore.acquire();
         JSONArray jsonArray = getFilesList();
         String fileName = "";
         for(Object object: jsonArray) {
@@ -524,6 +573,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             if(String.valueOf(infoFile.get("id")).equals(idFile))
                 fileName = (String) infoFile.get("fileName");
         }
+        semaphore.release();
         return fileName;
     }
 
@@ -531,20 +581,27 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         try {
             ArrayUsers arrayUsers = new ArrayUsers();
             ObjectMapper objectMapper = new ObjectMapper();
-
+            semaphore.acquire();
             objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
             arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
 
             for (User user: arrayUsers.usersArrayList) {
                 if(user.getUserName().equals(userName)){
+                    semaphore.release();
                     return user.getUserId();
                 }
             }
+            semaphore.release();
             return -1;
 
         } catch (IOException e) {
             e.printStackTrace();
+            semaphore.release();
+            return -1;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            semaphore.release();
             return -1;
         }
     }
@@ -553,6 +610,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
     public void doSubcriptionCallbacks(ArrayList<String> topicList) throws RemoteException{
         try {
+            semaphore.acquire();
             ArrayUsers arrayUsers = new ArrayUsers();
             ObjectMapper objectMapper = new ObjectMapper();
 
@@ -576,7 +634,10 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        semaphore.release();
     }
 
     private ArrayList<String> getTopicMatches(ArrayList<String> subsList, ArrayList<String> topicList) {

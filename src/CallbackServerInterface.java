@@ -22,27 +22,27 @@ public interface CallbackServerInterface extends Remote {
 //        to make its callbacks.
 
     public void registerForCallback(CallbackClientInterface callbackClientObject, String userName)
-            throws java.rmi.RemoteException;
+            throws java.rmi.RemoteException, InterruptedException;
 
 // This remote method allows an object client to
 // cancel its registration for callback
 
     public void unregisterForCallback(CallbackClientInterface callbackClientObject, String userName)
-            throws java.rmi.RemoteException;
+            throws java.rmi.RemoteException, InterruptedException;
 
     public byte[] fileToBytes(File file) throws java.rmi.RemoteException;
-    public File getFileToDownload(String fileName) throws java.rmi.RemoteException;
+    public File getFileToDownload(String fileName) throws java.rmi.RemoteException, InterruptedException;
 
     public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser)throws java.rmi.RemoteException;
 
-    public byte[] download(String name)throws java.rmi.RemoteException;
+    public byte[] download(String name) throws java.rmi.RemoteException, InterruptedException;
 
-    public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException;
+    public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException, InterruptedException;
 
-    public String downloadFile(JSONObject jsonObject) throws IOException;
-    public String downloadFileString(String string) throws IOException;
+    public String downloadFile(JSONObject jsonObject) throws IOException, InterruptedException;
+    public String downloadFileString(String string) throws IOException, InterruptedException;
 
-    public ArrayList<String> selectFile(JSONArray filesWithTitle)throws java.rmi.RemoteException;
+    public ArrayList<String> selectFile(JSONArray filesWithTitle) throws java.rmi.RemoteException, InterruptedException;
 
     public boolean checkCorrectUserName(String name) throws java.rmi.RemoteException;
 
@@ -50,13 +50,13 @@ public interface CallbackServerInterface extends Remote {
 
     public boolean checkCorrectUser(String userName, String password)throws java.rmi.RemoteException;
 
-    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException;
-    public JSONArray getFilesList() throws ParseException, IOException;
+    public ArrayList<String> showFileInfo(JSONArray filesList, String idFile) throws java.rmi.RemoteException, InterruptedException;
+    public JSONArray getFilesList() throws ParseException, IOException, InterruptedException;
 
-    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException;
+    public String deleteFileInfo(JSONArray filesList, String idFile) throws IOException, InterruptedException;
 
-    public String getFileName(String idFile) throws IOException, ParseException;
-    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException;
+    public String getFileName(String idFile) throws IOException, ParseException, InterruptedException;
+    public ArrayDataObject getArrayDataObject(ObjectMapper objectMapper) throws IOException, InterruptedException;
 
     public int getLastIdFromUsers() throws RemoteException;
     public int getIdFromUser(String userName) throws RemoteException;

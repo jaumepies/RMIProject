@@ -76,7 +76,7 @@ public class Client {
         }
     } //end main
 
-    private static void checkUserOption(CallbackServerInterface h) {
+    private static void checkUserOption(CallbackServerInterface h) throws InterruptedException {
         boolean correctOption = false;
         String option = "";
 
@@ -95,7 +95,7 @@ public class Client {
         }
     }
 
-    private static boolean isCorrectUserOption(String option, CallbackServerInterface h) {
+    private static boolean isCorrectUserOption(String option, CallbackServerInterface h) throws InterruptedException {
 
         switch (option){
             case "L": //Login
@@ -166,7 +166,7 @@ public class Client {
     }
 
 
-    private static void logUser(CallbackServerInterface h) {
+    private static void logUser(CallbackServerInterface h) throws InterruptedException {
 
         try {
             String userName, password;
@@ -254,6 +254,8 @@ public class Client {
                     h.unregisterForCallback(callbackObj, currentUserName);
                     isFinished = true;
                 } catch (RemoteException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 return true;
@@ -415,6 +417,8 @@ public class Client {
 
             } catch (ParseException e) {
                 e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -452,6 +456,8 @@ public class Client {
             } catch (IOException e) {
 
             } catch (ParseException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -491,6 +497,8 @@ public class Client {
             } catch (IOException e) {
 
             } catch (ParseException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
