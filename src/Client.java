@@ -34,20 +34,13 @@ public class Client {
             int RMIPort;
             String hostName;
 
-
-
-
-            /*System.out.println("Enter the RMIRegistry host namer:");
-            hostName = br.readLine();*/
             //ARREGLAR EL PORT -------------------------------------------------------------------
-            //System.out.println("Enter the RMIregistry port number:");
-            String portNum = "8001"; // br.readLine();
+            System.out.println("Enter the RMIServer IP:");
+            String strIP =  br.readLine();
+            System.out.println("Enter the RMIregistry port number:");
+            String portNum = br.readLine();
             RMIPort = Integer.parseInt(portNum);
-            /*System.out.println(
-                    "Enter how many seconds to stay registered:");
-            String timeDuration = br.readLine();
-            int time = Integer.parseInt(timeDuration);*/
-            String registryURL ="rmi://localhost:" + portNum + "/callback";
+            String registryURL ="rmi://" + strIP +":" + portNum + "/some";
             // find the remote object and cast it to an
             //   interface object
             CallbackServerInterface h = (CallbackServerInterface)Naming.lookup(registryURL);

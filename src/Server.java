@@ -1,37 +1,32 @@
+import java.net.InetAddress;
 import java.rmi.*;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.io.*;
 
-/**
- * This class represents the object server for a distributed
- * object of class Callback, which implements the remote
- * interface CallbackInterface.
- * @author M. L. Liu
- */
 
 public class Server {
     public static void main(String args[]) {
         InputStreamReader is =
                 new InputStreamReader(System.in);
         BufferedReader br = new BufferedReader(is);
-        String portNum, registryURL;
+        String portNum, registryURL, currentIp;
         try{
-            //System.out.println("Enter the RMIregistry port number:");
+            System.out.println("Enter the RMIregistry port number:");
             //ARREGLAR PORT --------------------------------------------------------
-            portNum = ("8001").trim(); //br.readLine()
+            portNum = br.readLine();
             int RMIPortNum = Integer.parseInt(portNum);
             startRegistry(RMIPortNum);
-            ServerImpl exportedObj =
-                    new ServerImpl();
-            registryURL =
-                    "rmi://localhost:" + portNum + "/callback";
+            ServerImpl exportedObj =new ServerImpl();
+            InetAddress iAddress = InetAddress.getLocalHost();
+            currentIp = iAddress.getHostAddress();
+            System.out.println("Current IP address: " +currentIp);
+            registryURL ="rmi://" + currentIp +":" + portNum + "/some";
             Naming.rebind(registryURL, exportedObj);
             System.out.println("Callback Server ready.");
         }// end try
         catch (Exception re) {
-            System.out.println(
-                    "Exception in HelloServer.main: " + re);
+            System.out.println("Exception in Server.main: " + re);
         } // end catch
     } // end main
 
@@ -40,16 +35,14 @@ public class Server {
     private static void startRegistry(int RMIPortNum)
             throws RemoteException{
         try {
-            Registry registry =
-                    LocateRegistry.getRegistry(RMIPortNum);
+            Registry registry =LocateRegistry.getRegistry(RMIPortNum);
             registry.list( );
             // This call will throw an exception
             // if the registry does not already exist
         }
         catch (RemoteException e) {
             // No valid registry at that port.
-            Registry registry =
-                    LocateRegistry.createRegistry(RMIPortNum);
+            Registry registry =LocateRegistry.createRegistry(RMIPortNum);
         }
     } // end startRegistry
 
