@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.rmi.*;
 import java.util.ArrayList;
-
+import java.util.List;
 
 
 public interface CallbackServerInterface extends Remote {
@@ -71,4 +71,8 @@ public interface CallbackServerInterface extends Remote {
             throws  RemoteException;
 
     public ArrayList<String> getTopicDescription(String idFile) throws RemoteException, IOException, ParseException;
+
+    public String addSubscription(ArrayList<String> newSubscriptionArrayList, String currentUser) throws RemoteException;
+
+    public String deleteSubscription(List<String> deleteSubscriptionList, String currentUserName) throws RemoteException;
 }

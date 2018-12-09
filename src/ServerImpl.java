@@ -334,6 +334,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
 
 
+
             //Store the last id.
             updateLastIdUser(newUser.getUserId());
 
@@ -710,7 +711,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
             for (User user: arrayUsers.usersArrayList) {
                 ArrayList<String> matches = getTopicMatches(user.getSubscriptionList(), topicList);
-                if (matches != null){
+                if (matches.size() != 0){
                     CallbackClientInterface callbackClient = clientHash.get(user.getUserId());
                     callbackClient.notifyMe("A file with "+ matches.toString() + " topics has been uploaded");
                 }
@@ -736,5 +737,66 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             }
         }
         return matches;
+    }
+
+    @Override
+    public String addSubscription(ArrayList<String> newSubscriptionArrayList, String currentUser) {
+        String stringToReturn = "No add";
+
+        try {
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayUsers arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+            ArrayList<User> usersArrayList = arrayUsers.getUsersArrayList();
+
+            for (User user : usersArrayList) {
+                if (user.getUserName().equals(currentUser)){
+                    user.addSubscriptionList(newSubscriptionArrayList);
+                    stringToReturn = "Now you have this subscriptions " + user.getSubscriptionList();
+                    break;
+
+                }
+
+            }
+            arrayUsers.setArrayUsers(usersArrayList);
+
+            objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
+
+        } catch (RemoteException e1){
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringToReturn;
+    }
+
+    @Override
+    public String deleteSubscription(List<String> deleteSubscriptionList, String currentUserName) {
+        String stringToReturn = "No delete";
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayUsers arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+            ArrayList<User> usersArrayList = arrayUsers.getUsersArrayList();
+
+            for (User user : usersArrayList) {
+                if (user.getUserName().equals(currentUserName)){
+                    user.deleteSubscriptionList(deleteSubscriptionList);
+                    stringToReturn = "Now you have this subscriptions " + user.getSubscriptionList();
+                    break;
+
+                }
+
+            }
+            arrayUsers.setArrayUsers(usersArrayList);
+
+            objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
+
+        } catch (RemoteException e1){
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringToReturn;
     }
 }// end ServerImpl class

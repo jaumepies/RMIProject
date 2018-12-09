@@ -623,8 +623,79 @@ public class Client {
     }
 
     private static void manageSubscriptionOption(CallbackServerInterface h) {
+        try {
+            boolean isCorrectOption = false;
+            while (!isCorrectOption) {
+                System.out.println("Return to menu[R] Add subscription[A] Delete subscription[D]");
+                String option = br.readLine();
+                switch (option){
+                    case "R":
+                        checkCorrectOption(h);
+                        isCorrectOption = true;
+                        break;
+
+                    case "A":
+                        addSubscription(h);
+                        isCorrectOption = true;
+                        break;
+
+                    case "D":
+                        deleteSubscription(h);
+                        isCorrectOption = true;
+                        break;
+
+                    default:
+                        System.out.println("Incorrect option");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
+    private static void deleteSubscription(CallbackServerInterface h) {
+        System.out.println("Delete the subscription");
+        try {
+            String deleteSubscription = br.readLine();
+
+            String[] strings = deleteSubscription.split(",");
+
+            ArrayList<String> deleteSubscriptionArrayList = new ArrayList<>();
+
+            for (String str : strings) {
+                deleteSubscriptionArrayList.add(str.trim());
+            }
+
+            System.out.println(h.deleteSubscription(deleteSubscriptionArrayList, currentUserName));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private static void addSubscription(CallbackServerInterface h) {
+        System.out.println("Add the new subscription");
+        try {
+            String newSubscription = br.readLine();
+
+            String[] strings = newSubscription.split(",");
+
+            ArrayList<String> newSubscriptionArrayList = new ArrayList<>();
+
+            for (String str : strings) {
+                newSubscriptionArrayList.add(str.trim());
+            }
+
+            System.out.println(h.addSubscription(newSubscriptionArrayList, currentUserName));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 }//end class

@@ -11,6 +11,9 @@ public class ArrayUsers {
         this.usersArrayList.add(user);
     }
 
+    public ArrayList<User> getUsersArrayList() {
+        return this.usersArrayList;
+    }
 
     public boolean exists(String name) {
         for (User user: usersArrayList) {
@@ -19,5 +22,9 @@ public class ArrayUsers {
             }
         }
         return false;
+    }
+
+    public void setArrayUsers(ArrayList<User> usersArrayList) {
+        this.usersArrayList = usersArrayList;
     }
 }
