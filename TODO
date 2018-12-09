@@ -13,5 +13,5 @@ TODO list:
         X->Modificar el Vector() per guardar el callbackObject amb el nom del usuari al que pertany.
         X->Al metode "registerForCallback" tenir en compte el usuari conectat actualment.
         X->Al metode "unregisterForCallback" eliminar el usuari que s'ha desconectat.
-        ->Quan es fa un Upload cridar al "notifyMe" de cada client que te la subscripcio del objecte carregat.
+        X->Quan es fa un Upload cridar al "notifyMe" de cada client que te la subscripcio del objecte carregat.
         ->Sincronitzacio (semafors). UPDATE I DOWNLOAD.
