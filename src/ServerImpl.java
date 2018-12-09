@@ -46,12 +46,12 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
     }
 
-    public String sayHello( ) throws java.rmi.RemoteException {
+    public String sayHello( ) throws RemoteException {
         return("hello");
     }
 
     public synchronized void registerForCallback(CallbackClientInterface callbackClientObject, String userName)
-            throws java.rmi.RemoteException, InterruptedException {
+            throws RemoteException, InterruptedException {
         // store the callback object into the vector
             semaphore.acquire();
 
@@ -71,7 +71,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 // @param id is an ID for the client; to be used by
 // the server to uniquely identify the registered client.
     public synchronized void unregisterForCallback(CallbackClientInterface callbackClientObject, String userName)
-            throws java.rmi.RemoteException, InterruptedException {
+            throws InterruptedException {
 
         semaphore.acquire();
 
@@ -86,7 +86,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }
     }
 
-    private synchronized void doCallbacks( ) throws java.rmi.RemoteException{
+    private synchronized void doCallbacks( ) throws RemoteException{
         // make callback to each logged client
         int index = 0;
         System.out.println("**************************************\n" + "Callbacks initiated ---");
@@ -209,24 +209,28 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
         JSONArray filesList = getFilesList();
         //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
+        if(filesList == null) {
+            semaphore.release();
+            return new JSONArray();
+        } else {
+            JSONArray filesWithTitle = new JSONArray();
 
-        JSONArray filesWithTitle = new JSONArray();
-
-        for (Object f : filesList) {
-            JSONObject file = (JSONObject) f;
-            if(Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                    file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
-                    Pattern.CASE_INSENSITIVE).matcher(String.valueOf( file.get("topicList"))).find() ||
-                    Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
-                            file.get("name")).find()){
-                //System.out.println("Found title");
-                filesWithTitle.add(file);
-            } else {
-                //System.out.println("Title not found");
+            for (Object f : filesList) {
+                JSONObject file = (JSONObject) f;
+                if (Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                        file.get("fileName")).find() || Pattern.compile(Pattern.quote(fileTitle),
+                        Pattern.CASE_INSENSITIVE).matcher(String.valueOf(file.get("topicList"))).find() ||
+                        Pattern.compile(Pattern.quote(fileTitle), Pattern.CASE_INSENSITIVE).matcher((CharSequence)
+                                file.get("name")).find()) {
+                    //System.out.println("Found title");
+                    filesWithTitle.add(file);
+                } else {
+                    //System.out.println("Title not found");
+                }
             }
+            semaphore.release();
+            return filesWithTitle;
         }
-        semaphore.release();
-        return filesWithTitle;
     }
 
     public JSONArray getFilesList() throws ParseException, IOException, InterruptedException {
@@ -289,6 +293,21 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             Object f = filesWithTitle.get(i);
             JSONObject file = (JSONObject) f;
             arrayList.add(file.get("name") + "[" + file.get("id") +"] ");
+        }
+        semaphore.release();
+        return arrayList;
+    }
+
+    @Override
+    public ArrayList<String> selectFileWithDescription(JSONArray filesWithTitle) throws InterruptedException {
+        semaphore.acquire();
+        ArrayList<String> arrayList = new ArrayList<>();
+        for (int i = 0; i < filesWithTitle.size(); i++) {
+            Object f = filesWithTitle.get(i);
+            JSONObject file = (JSONObject) f;
+            arrayList.add("Title: " + file.get("name") + ", Topic Description: " +
+                    file.get("topicList").toString().replace("[","").replace("]","").replace("\"", "")
+                    + " [" + file.get("id") +"] ");
         }
         semaphore.release();
         return arrayList;
@@ -807,6 +826,31 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
             arrayUsers.setArrayUsers(usersArrayList);
 
             objectMapper.writeValue(new File(FILE_USERS), arrayUsers);
+
+        } catch (RemoteException e1){
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringToReturn;
+    }
+
+    @Override
+    public String getSubscriptions(String currentUserName) {
+        String stringToReturn = "";
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayUsers arrayUsers = objectMapper.readValue(new File(FILE_USERS), ArrayUsers.class);
+            ArrayList<User> usersArrayList = arrayUsers.getUsersArrayList();
+
+            for (User user : usersArrayList) {
+                if (user.getUserName().equals(currentUserName)){
+                    stringToReturn += user.getSubscriptionList();
+                    break;
+                }
+
+            }
 
         } catch (RemoteException e1){
             e1.printStackTrace();
