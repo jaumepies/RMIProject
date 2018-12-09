@@ -205,12 +205,12 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
 
     @Override
     public JSONArray getFilesWithTitles(String fileTitle) throws IOException, ParseException, InterruptedException {
-            semaphore.acquire();
+        semaphore.acquire();
 
-            JSONArray filesList = getFilesList();
-            //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
+        JSONArray filesList = getFilesList();
+        //JSONArray filesList = (JSONArray) parser.parse(new FileReader(FILE_INFO));
 
-            JSONArray filesWithTitle = new JSONArray();
+        JSONArray filesWithTitle = new JSONArray();
 
         for (Object f : filesList) {
             JSONObject file = (JSONObject) f;
@@ -225,6 +225,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
                 //System.out.println("Title not found");
             }
         }
+        semaphore.release();
         return filesWithTitle;
     }
 
@@ -351,8 +352,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }
     }
 
-    private void updateLastIdUser(int newId) throws InterruptedException {
-        semaphore.acquire();
+    private void updateLastIdUser(int newId)  {
         JSONParser jsonParser = new JSONParser();
         ObjectMapper objectMapper = new ObjectMapper();
         try
@@ -370,7 +370,6 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }catch(Exception e){
             e.printStackTrace();
         }
-        semaphore.release();
     }
 
     private void updateLastIdFile(int newId) throws InterruptedException {
@@ -544,7 +543,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
     }
 
     private void deleteFileFromServer(String fileNameToDelete) {
-        File file = new File("./receivedData/" + fileNameToDelete);
+        File file = new File("./Server/" + fileNameToDelete);
         if(file.delete()){
             System.out.println(fileNameToDelete + " deleted");
         }else System.out.println("File does not exists");
@@ -570,7 +569,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
     }
 
     @Override
-    public String getName(String idFile) throws IOException, ParseException {
+    public String getName(String idFile) throws IOException, ParseException, InterruptedException {
         JSONArray jsonArray = getFilesList();
         String name = "";
         for(Object object: jsonArray) {
@@ -582,7 +581,7 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
     }
 
     @Override
-    public ArrayList<String> getTopicDescription(String idFile) throws IOException, ParseException {
+    public ArrayList<String> getTopicDescription(String idFile) throws IOException, ParseException, InterruptedException {
         JSONArray jsonArray = getFilesList();
         ArrayList<String> descriptionList = new ArrayList<>();
         for(Object object: jsonArray) {

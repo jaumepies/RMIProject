@@ -118,14 +118,14 @@ public class Client {
 
     private static void registNewUser(CallbackServerInterface h) {
         try {
-            String userName, password, confirmation;
+            String userName, password, confirmation, opt;
             ArrayList<String> topicList = new ArrayList<>();
 
             do{
                 System.out.println("Enter user name:");
                 userName = br.readLine();
 
-                if (!h.checkCorrectUserName(userName)){
+                if (!h.checkCorrectUserName(userName.trim())){
                     System.out.println("This name already exists!\n");
                 }
 
@@ -143,18 +143,23 @@ public class Client {
             }
             while (!password.equals(confirmation));
 
-            System.out.println("You want to subscribe to any topic? Yes[Y]/No[N]\n");
-            String opt = br.readLine();
-            if (opt.equals("Y")){
-                System.out.println("Introduce a list of topics(Example: animal, videogame, horror):\n");
-                String strTopics = br.readLine();
-                String[]topicSplited = strTopics.split(",");
-                for (String elem: topicSplited) {
-                    topicList.add(elem.trim());
+            do {
+                System.out.println("You want to subscribe to any topic? Yes[Y]/No[N]\n");
+                opt = br.readLine();
+                if (opt.equals("Y")) {
+                    System.out.println("Introduce a list of topics(Example: animal, videogame, horror):\n");
+                    String strTopics = br.readLine();
+                    String[] topicSplited = strTopics.split(",");
+                    for (String elem : topicSplited) {
+                        topicList.add(elem.trim());
+                    }
+                } else if (!opt.equals("N")) {
+                    System.out.println("Incorrect option");
                 }
-            }
+            }while(!opt.equals("N") && !opt.equals("Y"));
+
             int lastid = h.getLastIdFromUsers();
-            User newUser = new User(userName, password, lastid+1);
+            User newUser = new User(userName.trim(), password.trim(), lastid+1);
             newUser.setSubscriptionList(topicList);
             System.out.println(h.registerNewUser(newUser));
 
@@ -510,6 +515,8 @@ public class Client {
 
             } catch (ParseException e) {
                 e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -581,6 +588,8 @@ public class Client {
             } catch (IOException e) {
 
             } catch (ParseException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
