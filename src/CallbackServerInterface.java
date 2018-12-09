@@ -2,10 +2,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.rmi.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,20 +11,12 @@ import java.util.List;
 
 public interface CallbackServerInterface extends Remote {
 
-    public String sayHello( )
-            throws RemoteException;
-
-// This remote method allows an object client to
-// register for callback
-// @param callbackClientObject is a reference to the
-//        object of the client; to be used by the server
-//        to make its callbacks.
+    public String sayHello() throws RemoteException;
 
     public void registerForCallback(CallbackClientInterface callbackClientObject, String userName)
             throws RemoteException, InterruptedException;
 
-// This remote method allows an object client to
-// cancel its registration for callback
+
 
     public void unregisterForCallback(CallbackClientInterface callbackClientObject, String userName)
             throws RemoteException, InterruptedException;
@@ -34,7 +24,8 @@ public interface CallbackServerInterface extends Remote {
     public byte[] fileToBytes(File file) throws RemoteException, InterruptedException;
     public File getFileToDownload(String fileName) throws RemoteException, InterruptedException;
 
-    public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser)throws RemoteException;
+    public String upload(byte[] bytes, File fileDest, String name, ArrayList<String> topicList, int idUser)
+            throws RemoteException;
 
     public byte[] download(String name) throws RemoteException, InterruptedException;
 
@@ -44,7 +35,8 @@ public interface CallbackServerInterface extends Remote {
     public String downloadFileString(String string) throws IOException, InterruptedException;
 
     public ArrayList<String> selectFile(JSONArray filesWithTitle) throws RemoteException, InterruptedException;
-    public ArrayList<String> selectFileWithDescription(JSONArray filesWithTitle) throws RemoteException, InterruptedException;
+    public ArrayList<String> selectFileWithDescription(JSONArray filesWithTitle)
+            throws RemoteException, InterruptedException;
 
     public boolean checkCorrectUserName(String name) throws RemoteException;
 
@@ -63,8 +55,6 @@ public interface CallbackServerInterface extends Remote {
 
     public int getLastIdFromUsers() throws RemoteException, InterruptedException;
     public int getIdFromUser(String userName) throws RemoteException;
-    public String getUserFromId(int idUser) throws RemoteException;
-
 
     public String changeFileTitle(String oldTitle, String newTitle, String currentUser) throws RemoteException;
 

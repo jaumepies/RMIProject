@@ -12,6 +12,7 @@ public class Server {
         BufferedReader br = new BufferedReader(is);
         String portNum, registryURL, currentIp;
         try{
+            //call for a port number
             System.out.println("Enter the RMIregistry port number:");
             portNum = br.readLine();
             int RMIPortNum = Integer.parseInt(portNum);
@@ -19,8 +20,10 @@ public class Server {
             ServerImpl exportedObj =new ServerImpl();
             InetAddress iAddress = InetAddress.getLocalHost();
             currentIp = iAddress.getHostAddress();
+            //get the IP address and show it
             System.out.println("Current IP address: " +currentIp);
             registryURL ="rmi://" + currentIp +":" + portNum + "/some";
+            //stay in a rebind position waiting for a connection from clients.
             Naming.rebind(registryURL, exportedObj);
             System.out.println("Callback Server ready.");
         }// end try

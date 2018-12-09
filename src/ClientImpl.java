@@ -1,10 +1,8 @@
-import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
 
 
-public class ClientImpl extends UnicastRemoteObject
-        implements CallbackClientInterface {
+public class ClientImpl extends UnicastRemoteObject implements CallbackClientInterface {
 
 
     public ClientImpl() throws RemoteException {

@@ -13,35 +13,20 @@ public class DataObject {
     private int id;
     private int idUser;
 
+    public DataObject() {
 
-    static JSONObject jsonObject;
-
-    public  DataObject() {
-        this.name = null;
-        this.topicList = null;
-        jsonObject = null;
-        this.id = 0;
-        this.fileName = null;
-        this.idUser = 0;
     }
 
     public  DataObject(String name, ArrayList<String> tl, String fileName, int idUser, int idFile) {
         this.name = name;
         this.topicList = tl;
-        jsonObject = new JSONObject();
         id = idFile;
         this.fileName = fileName;
         this.idUser = idUser;
     }
 
-
-
     public int getIdUser() {
         return idUser;
-    }
-
-    public void setIdUser(int idUser) {
-        this.idUser = idUser;
     }
 
     public String getName() {
@@ -68,20 +53,7 @@ public class DataObject {
         return fileName;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public JSONObject createJSONObject(){
-        jsonObject.put("name", this.name);
-        jsonObject.put("topicList", this.topicList);
-        jsonObject.put("id", this.id);
-        jsonObject.put("fileName", this.fileName);
-        jsonObject.put("idUser", this.idUser);
-        return jsonObject;
-    }
-
-
+    //Check if DataObjects are equals
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -1,19 +1,11 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
+import org.json.simple.parser.ParseException;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.MalformedURLException;
-import java.net.UnknownServiceException;
 import java.rmi.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
-
 
 public class Client {
 
@@ -36,14 +28,17 @@ public class Client {
         try {
             boolean isConnected;
             do {
+                //while the client is not connected, check the server info
                 isConnected = entryServerInfo();
             }
             while (!isConnected);
+            //do the lookup to the server with a IP and a port
             String registryURL = "rmi://" + strIP + ":" + portNum + "/some";
             CallbackServerInterface h = (CallbackServerInterface)Naming.lookup(registryURL);
 
             System.out.println("Lookup completed " );
             System.out.println("Server said " + h.sayHello());
+            //show to the user which options he has.
             while(!endExecution) {
                 checkUserOption(h);
 
@@ -64,7 +59,9 @@ public class Client {
 
     private static boolean entryServerInfo() {
         try {
+            //while the IP or the port number ara null, read the input.
             do {
+                //read the IP, or if the server is local, read localhost
                 System.out.println("Enter the Remote RMIServer IP or [localhost]:");
                 strIP = br.readLine();
                 System.out.println("Enter the RMIregistry port number:");
@@ -77,10 +74,11 @@ public class Client {
                 }
             }while (strIP.equals("") || portNum.equals(""));
             String registryURL = "rmi://" + strIP + ":" + portNum + "/some";
-            // find the remote object and cast it to an
-            //   interface object
+            //try to do a lookup to the server
             Naming.lookup(registryURL);
             return true;
+            //if it its impossible to connect, show a message and return FALSE
+            //to show an other time the input messages
         } catch (NotBoundException ignore) {
             System.out.println("Impossible to connect to server");
             return false;
@@ -103,6 +101,7 @@ public class Client {
         String option = "";
 
         while (!correctOption) {
+            //Check if you press R before in the Login menu or Register menu
             if(!jump) {
                 isFinished = false;
                 System.out.println("\nChoose your option:");
@@ -141,6 +140,7 @@ public class Client {
     }
 
     private static void registNewUser(CallbackServerInterface h) {
+
         try {
             String userName, password, confirmation, opt;
             ArrayList<String> topicList = new ArrayList<>();
@@ -148,9 +148,11 @@ public class Client {
             do {
                 do{
                     System.out.println("Enter user name / Return[R]");
+                    //Get the username
                     userName = br.readLine();
                     if(userName.equals("R")) {
                         checkUserOption(h);
+                        //This boolean is to check if you introduce R
                         jump = true;
                         return;
                     }
@@ -159,6 +161,7 @@ public class Client {
                         registNewUser(h);
                     } else {
 
+                        //Check if the user exists
                         if (!h.checkCorrectUserName(userName.trim())) {
                             System.out.println("This name already exists!");
                         }
@@ -173,10 +176,12 @@ public class Client {
                 System.out.println("Confirm the password:");
                 confirmation = br.readLine();
 
+                //Check if password is too short
                 if( password.length() < 4){
                     System.out.println("Error, the password is too short. Minimum 4 characters");
                 }
 
+                //Check if the password if the same
                 else if (!password.equals(confirmation))
                     System.out.println("Error, the password confirmation must be the same!!:");
             }
@@ -187,8 +192,10 @@ public class Client {
                 opt = br.readLine();
                 if (opt.equals("Y")) {
                     System.out.println("Introduce a list of topics(Example: animal, videogame, horror):");
+                    //Get the topics
                     String strTopics = br.readLine();
                     String[] topicSplited = strTopics.split(",");
+                    //Convert to ArrayList
                     for (String elem : topicSplited) {
                         topicList.add(elem.trim());
                     }
@@ -198,7 +205,9 @@ public class Client {
             }while(!opt.equals("N") && !opt.equals("Y"));
 
             int lastid = h.getLastIdFromUsers();
+            //Create a new user
             User newUser = new User(userName.trim(), password.trim(), lastid+1);
+            //Set his topic List
             newUser.setSubscriptionList(topicList);
             System.out.println(h.registerNewUser(newUser));
 
@@ -221,14 +230,18 @@ public class Client {
             boolean correctUser;
             do{
                 System.out.println("Enter user name / Return[R]");
+                //Get the username
                 userName = br.readLine();
                 if(userName.equals("R")) {
                     checkUserOption(h);
+                    //This boolean is to check if you introduce R
                     jump = true;
                     return;
                 }
                 System.out.println("Enter the password:");
+                //Get the password
                 password = br.readLine();
+                //Check if the user login is correct
                 correctUser = h.checkCorrectUser(userName, password);
                 if(!correctUser){
                     System.out.println("User name or password incorrect!");
@@ -248,12 +261,9 @@ public class Client {
                 }
             }
 
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private static void checkCorrectOption(CallbackServerInterface h) {
@@ -267,7 +277,7 @@ public class Client {
 
             String option = "";
             try {
-                option = br.readLine();
+                option = br.readLine(); //Get the option
             } catch (IOException e) {
             }
 
@@ -327,17 +337,20 @@ public class Client {
         while(!isCorrectFile){
             System.out.println("Enter the filename to upload / Return[R]");
             try{
-                //Get the file name
+                //Get the filename
                 String fileNameUp = br.readLine();
 
                 if (fileNameUp.equals("")){
                     System.out.println("The file is empty");
+
                 } else if(fileNameUp.equals("R")) {
+                    //Return to the menu
                     isCorrectFile = true;
                     checkCorrectOption(h);
                 }
                 else {
 
+                    //Get the file to upload
                     File file = getFile(fileNameUp);
 
                     if(file == null) {
@@ -347,20 +360,24 @@ public class Client {
                         byte[] fileBytes = fileToBytes(file);
                         //Get the Destination path
                         File fileDest = new File("./Server/"+fileNameUp);
+                        //Copy the name to check if it changes
                         String copyName = fileNameUp;
                         while(fileDest.exists()) {
                             copyName += "1";
                             fileDest = new File("./Server/"+copyName);
                         }
+                        //Get the title of the file
                         String fileTitleUp = getTitle();
+                        //Get the topicList of the file
                         ArrayList<String> fileTopicListUp = getTopicList();
 
                         if(copyName != fileNameUp) {
                             System.out.println("The file already exists and it has been modified to "+ copyName);
                         }
 
-                        //Upload the file to the server
+                        //Get the id user
                         int idUser = h.getIdFromUser(currentUserName);
+                        //Upload the file to the server
                         System.out.println(h.upload(fileBytes, fileDest, fileTitleUp, fileTopicListUp, idUser));
                         isCorrectFile = true;
                     }
@@ -373,6 +390,7 @@ public class Client {
     }
 
     private static String getTitle() {
+
         String title = "";
         try{
             do{
@@ -391,6 +409,7 @@ public class Client {
         try{
             System.out.println("Enter the topic of the file:");
             strTopics = br.readLine();
+            //Add the topics to Arraylist
             String[] topicSplited = strTopics.split(",");
             for (String elem: topicSplited) {
                 topicList.add(elem.trim());
@@ -402,6 +421,8 @@ public class Client {
     }
 
     private static byte[] fileToBytes(File file) {
+
+        //Converting the file to bytes
         byte[] bytes = new byte[BUF_SIZE];
 
         try {
@@ -409,12 +430,8 @@ public class Client {
             try {
                 fis = new FileInputStream(file);
             } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                System.out.println("El fitxer no existeix");
-                //e.printStackTrace();
+                System.out.println("The file does not exists");
             }
-            //create FileInputStream which obtains input bytes from a file in a file system
-            //FileInputStream is meant for reading streams of raw bytes such as image data. For reading streams of characters, consider using FileReader.
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buf = new byte[BUF_SIZE];
@@ -422,7 +439,6 @@ public class Client {
                 for (int readNum; (readNum = fis.read(buf)) != -1;) {
                     //Writes to this byte array output stream
                     bos.write(buf, 0, readNum);
-                    // System.out.println("read " + readNum + " bytes,");
                 }
 
             } catch (IOException e) {
@@ -430,11 +446,9 @@ public class Client {
             }
 
             bytes = bos.toByteArray();
-            bos.close(); // should be inside a finally block
-
+            bos.close();
 
         } catch (IOException e) {
-            // handle IOException
             e.printStackTrace();
         }
 
@@ -442,6 +456,7 @@ public class Client {
     }
 
     private static File getFile(String fileNameUp) {
+        //Get the file from Client's folder
         File file = new File("./Client/"+fileNameUp);
         if(file.exists()) {
             return  file;
@@ -455,22 +470,27 @@ public class Client {
         while (!isCorrectTitle) {
             System.out.println("Enter the title to download / Return[R]");
             try{
+                //Get the title
                 String fileTitle = br.readLine();
                 if (fileTitle.equals("")) {
                     System.out.println("The title is empty");
                 } else if(fileTitle.equals("R")) {
+                    //Return to menu
                     isCorrectTitle = true;
                     checkCorrectOption(h);
                 }
                 else {
-
+                    //Check the size of the files with this title
                     if (h.getFilesWithTitles(fileTitle).size() == 0) {
                         System.out.println("Title not found");
                     } else {
                         isCorrectTitle = true;
 
+                        //Get the files with this titles
                         ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
+
                         System.out.println("Return to menu[R]");
+                        //Show the titles
                         for (String str : listWithTitles) {
                             System.out.println(str);
                         }
@@ -479,6 +499,7 @@ public class Client {
                         String checkIdFile = "["+idFile+"]";
                         boolean isCorrectId = false;
 
+                        //Check if id is in the list shown
                         for (String str : listWithTitles) {
                             if(str.contains(checkIdFile)){
                                 isCorrectId = true;
@@ -486,9 +507,13 @@ public class Client {
                         }
 
                         if (idFile.equals("R")) {
+                            //Return to menu
                             checkCorrectOption(h);
                         } else if(isCorrectId) {
+                            //The id is in the list shown
+                            //Get the filename
                             String fileName = h.getFileName(idFile);
+                            //Download the filename
                             System.out.println(h.downloadFileString(fileName));
 
                         } else {
@@ -514,24 +539,29 @@ public class Client {
         while (!isCorrectDescription) {
             System.out.println("Enter the description to search / Return[R]");
             try{
+                //Get the description
                 String fileDescription = br.readLine();
 
                 if (fileDescription.equals("")) {
                     System.out.println("The title is empty");
                 } else if(fileDescription.equals("R")) {
+                    //Return to menu
                     isCorrectDescription = true;
                     checkCorrectOption(h);
                 }
                 else {
 
+                    //Check the size of the files with the description
                     if (h.getFilesWithTitles(fileDescription).size() == 0) {
                         System.out.println("Description not found");
                     } else {
                         isCorrectDescription = true;
                         System.out.println("Select the title to search");
 
+                        //Get the titles with the description
                         ArrayList<String> selectTitleArray = h.selectFile(h.getFilesWithTitles(fileDescription));
                         System.out.println("Return to menu[R]");
+                        //Show the titles
                         for (String title : selectTitleArray) {
                             System.out.println(title);
                         }
@@ -540,6 +570,7 @@ public class Client {
                         String checkIdFile = "[" + idFile + "]";
                         boolean isCorrectId = false;
 
+                        //Check if the id introduced is valid
                         for (String str : selectTitleArray) {
                             if (str.contains(checkIdFile)) {
                                 isCorrectId = true;
@@ -549,6 +580,7 @@ public class Client {
                         if (idFile.equals("R")) {
                             checkCorrectOption(h);
                         } else if (isCorrectId) {
+                            //Show the info of the file
                             ArrayList<String> infoTitle = h.showFileInfo(h.getFilesList(), idFile);
                             for (String info : infoTitle) {
                                 System.out.println(info);
@@ -574,8 +606,10 @@ public class Client {
         while (!isCorrectTitle) {
             System.out.println("Enter the title to remove");
             try{
+                //Get the title to delete
                 String fileTitle = br.readLine();
 
+                //Check the size of the files with this title
                 if(h.getFilesWithTitles(fileTitle).size() == 0) {
                     System.out.println("Title not found");
                 }
@@ -583,8 +617,10 @@ public class Client {
                     isCorrectTitle = true;
                     System.out.println("Select the title to remove");
 
+                    //Get the titles and their description
                     ArrayList<String> selectTitleArray = h.selectFileWithDescription(h.getFilesWithTitles(fileTitle));
                     System.out.println("Return to menu[R]");
+                    //Show the titles with their description
                     for(String title: selectTitleArray) {
                         System.out.println(title);
                     }
@@ -593,6 +629,7 @@ public class Client {
                     String checkIdFile = "["+idFile+"]";
                     boolean isCorrectId = false;
 
+                    //Check if the id is valid
                     for (String str : selectTitleArray) {
                         if(str.contains(checkIdFile)){
                             isCorrectId = true;
@@ -602,14 +639,17 @@ public class Client {
                     if(idFile.equals("R")) {
                         checkCorrectOption(h);
                     } else if(isCorrectId) {
+                        //Check if are you sure
                         System.out.println("Are you sure? \n Yes[Y] / No[N]");
                         String sure = br.readLine();
                         if(sure.equals("Y")) {
+                            //Delete the title
                             String deleteInfo = h.deleteFileInfo(h.getFilesList(), idFile, currentUserName);
 
                             System.out.println(deleteInfo);
                         }
                         else{
+                            //Go to the delete menu
                             deleteOption(h);
                         }
                     } else {
@@ -632,25 +672,30 @@ public class Client {
         try {
             boolean isCorrectOption = false;
             while (!isCorrectOption) {
-                System.out.println("Return to menu[R] Change Title[T] Change Description[D]");
+                System.out.println("Change Title[T] Change Description[D] Return to menu[R]");
+                //Get the change option
                 String option = br.readLine();
                 switch (option){
                     case "R":
+                        //Go to the menu
                         checkCorrectOption(h);
                         isCorrectOption = true;
                         break;
 
                     case "T":
+                        //Go to change title
                         changeTitle(h);
                         isCorrectOption = true;
                         break;
 
                     case "D":
+                        //Go to change description
                         changeDescription(h);
                         isCorrectOption = true;
                         break;
 
                     default:
+                        //Invalid option
                         System.out.println("Incorrect option");
                 }
             }
@@ -666,6 +711,7 @@ public class Client {
         while (!isCorrectTitle) {
             System.out.println("Enter the title to modify");
             try{
+                //Get the title to modify
                 String fileTitle = br.readLine();
 
                 if(h.getFilesWithTitles(fileTitle).size() == 0) {
@@ -675,8 +721,10 @@ public class Client {
                     isCorrectTitle = true;
 
                     String newTitle ="";
+                    //Get the list of the files with this title
                     ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileTitle));
                     System.out.println("Return to menu[R]");
+                    //Show titles
                     for(String str: listWithTitles) {
                         System.out.println(str);
                     }
@@ -685,9 +733,12 @@ public class Client {
                         checkCorrectOption(h);
                     } else{
                         System.out.println("Enter the new title");
+                        //Get the new title
                          newTitle = br.readLine();
                     }
+                    //Get the old title
                     String oldTitle = h.getName(idFile);
+                    //Change old to new title
                     System.out.println(h.changeFileTitle(oldTitle, newTitle, currentUserName));
                 }
 
@@ -706,6 +757,7 @@ public class Client {
         while (!isCorrectDescription) {
             System.out.println("Enter the topic description to modify");
             try{
+                //Get the description to modify
                 String fileDescription = br.readLine();
 
                 if(h.getFilesWithTitles(fileDescription).size() == 0) {
@@ -717,9 +769,10 @@ public class Client {
                     List<String> newDescriptionList = new ArrayList<>();
                     String newDescription = "";
                     String strings[] = {};
-                    ArrayList<String> listWithTitles = h.selectFile(h.getFilesWithTitles(fileDescription));
+                    //Get the files with the description to modify
+                    ArrayList<String> listWithDescription = h.selectFile(h.getFilesWithTitles(fileDescription));
                     System.out.println("Return to menu[R]");
-                    for(String str: listWithTitles) {
+                    for(String str: listWithDescription) {
                         System.out.println(str);
                     }
                     String idFile = br.readLine();
@@ -727,13 +780,17 @@ public class Client {
                         checkCorrectOption(h);
                     } else{
                         System.out.println("Enter the topic description");
+                        //Get the new description
                         newDescription = br.readLine();
                         strings = newDescription.split(",");
 
                     }
+                    //Convert description string to arraylist
                     newDescriptionList = Arrays.asList(strings);
                     ArrayList<String> newDescriptionArrayList = new ArrayList<>(newDescriptionList);
+                    //Get old description
                     ArrayList<String> oldDescription = h.getTopicDescription(idFile);
+                    //Change old to new description
                     System.out.println(h.changeFileDecription(oldDescription, newDescriptionArrayList, currentUserName));
                 }
 
@@ -753,19 +810,23 @@ public class Client {
             while (!isCorrectOption) {
                 System.out.println("You are subscribed at: " + h.getSubscriptions(currentUserName));
                 System.out.println("Add subscription[A] Delete subscription[D] Return to menu[R]");
+                //Get the Subscription Option
                 String option = br.readLine();
                 switch (option){
                     case "R":
+                        //Go to the menu
                         checkCorrectOption(h);
                         isCorrectOption = true;
                         break;
 
                     case "A":
+                        //Go to add subscription
                         addSubscription(h);
                         isCorrectOption = true;
                         break;
 
                     case "D":
+                        //Go to delete subscription
                         deleteSubscription(h);
                         isCorrectOption = true;
                         break;
@@ -784,6 +845,7 @@ public class Client {
     private static void deleteSubscription(CallbackServerInterface h) {
         System.out.println("Delete the subscription");
         try {
+            //Get delete subscription
             String deleteSubscription = br.readLine();
             if(deleteSubscription.equals("")) {
                 System.out.println("No subscription has been deleted");
@@ -793,10 +855,12 @@ public class Client {
 
                 ArrayList<String> deleteSubscriptionArrayList = new ArrayList<>();
 
+                //Convert string to ArrayList
                 for (String str : strings) {
                     deleteSubscriptionArrayList.add(str.trim());
                 }
 
+                //Delete the subscription
                 System.out.println(h.deleteSubscription(deleteSubscriptionArrayList, currentUserName));
             }
         } catch (IOException e) {
@@ -809,6 +873,7 @@ public class Client {
     private static void addSubscription(CallbackServerInterface h) {
         System.out.println("Add the new subscription");
         try {
+            //Get add subscription
             String newSubscription = br.readLine();
 
             if (newSubscription.equals("")) {
@@ -818,10 +883,12 @@ public class Client {
 
                 ArrayList<String> newSubscriptionArrayList = new ArrayList<>();
 
+                //Convert string to ArrayList
                 for (String str : strings) {
                     newSubscriptionArrayList.add(str.trim());
                 }
 
+                //Add new subscription
                 System.out.println(h.addSubscription(newSubscriptionArrayList, currentUserName));
             }
 
