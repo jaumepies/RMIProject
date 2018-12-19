@@ -1,8 +1,10 @@
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.rmi.*;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.io.*;
+import java.util.Enumeration;
 
 
 public class Server {
@@ -19,7 +21,24 @@ public class Server {
             startRegistry(RMIPortNum);
             ServerImpl exportedObj =new ServerImpl();
             InetAddress iAddress = InetAddress.getLocalHost();
-            currentIp = iAddress.getHostAddress();
+
+
+            InetAddress addr = InetAddress.getLocalHost();
+
+            Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
+
+            NetworkInterface e = n.nextElement();
+            Enumeration<InetAddress> a = e.getInetAddresses();
+            for (; a.hasMoreElements();)
+            {
+                addr = a.nextElement();
+            }
+            currentIp = addr.getHostAddress();
+
+
+
+
+            //currentIp = iAddress.getHostAddress();
             //get the IP address and show it
             System.out.println("Current IP address: " +currentIp);
             registryURL ="rmi://" + currentIp +":" + portNum + "/some";
