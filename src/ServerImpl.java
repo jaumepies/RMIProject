@@ -887,4 +887,16 @@ public class ServerImpl extends UnicastRemoteObject implements CallbackServerInt
         }
         return stringToReturn;
     }
+
+    @Override
+    public String exists(String nameFileUp) throws RemoteException {
+        File fileDest = new File("./Server/"+nameFileUp);
+        //Copy the name to check if it changes
+        String newName = nameFileUp;
+        while(fileDest.exists()) {
+            newName += "1";
+            fileDest = new File("./Server/"+newName);
+        }
+        return newName;
+    }
 }// end ServerImpl class

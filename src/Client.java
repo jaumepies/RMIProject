@@ -359,20 +359,33 @@ public class Client {
                         //Create a byte array to send
                         byte[] fileBytes = fileToBytes(file);
                         //Get the Destination path
+
+
+
                         File fileDest = new File("./Server/"+fileNameUp);
+                        String newName = h.exists(fileNameUp);
+                        if(!newName.equals(fileNameUp)) {
+                            fileDest = new File("./Server/"+newName);
+                        }
+
+
+                        /*
                         //Copy the name to check if it changes
                         String copyName = fileNameUp;
                         while(fileDest.exists()) {
                             copyName += "1";
                             fileDest = new File("./Server/"+copyName);
                         }
+                        */
+
+
                         //Get the title of the file
                         String fileTitleUp = getTitle();
                         //Get the topicList of the file
                         ArrayList<String> fileTopicListUp = getTopicList();
 
-                        if(copyName != fileNameUp) {
-                            System.out.println("The file already exists and it has been modified to "+ copyName);
+                        if(newName != fileNameUp) {
+                            System.out.println("The file already exists and it has been modified to "+ newName);
                         }
 
                         //Get the id user

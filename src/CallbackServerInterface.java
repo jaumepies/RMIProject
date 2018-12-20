@@ -68,4 +68,6 @@ public interface CallbackServerInterface extends Remote {
     public String deleteSubscription(List<String> deleteSubscriptionList, String currentUserName) throws RemoteException;
 
     public String getSubscriptions(String currentUserName) throws RemoteException;
+
+    public String exists(String nameFileUp) throws RemoteException;
 }
